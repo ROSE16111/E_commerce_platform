@@ -53,3 +53,20 @@ PostgreSQL
 6. Initialize Next.js frontend with Tailwind and Recharts
 7. Build UI pages: Products, Orders, Reports; wire APIs
 8. Add sample CSVs and update README with usage steps
+
+## 
+* 导入 CSV 模板与规则
+upsert_products
+
+必填表头: sku,name,cost_price,quantity
+可选表头: preset_price,actual_price
+数字列允许空值（会按空处理）
+e.g. 
+```
+sku,name,cost_price,quantity,preset_price,actual_price
+SKU001,T-Shirt,20,100,39.9,
+SKU002,Cap,10,50,19.9,18.0
+```
+导入为“幂等”式：已存在 SKU 将更新，不存在则创建。返回统计 inserted/updated
+
+* .gitignore: 忽略缓存、虚拟环境、日志、Docker、前端 node_modules 等

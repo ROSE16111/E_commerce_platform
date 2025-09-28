@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from . import models, schemas
 from datetime import datetime
+from typing import Iterable
 
 
 def create_product(db: Session, data: schemas.ProductCreate) -> models.Product:
@@ -36,6 +37,35 @@ def update_product(db: Session, product: models.Product, data: schemas.ProductUp
 	db.commit()
 	db.refresh(product)
 	return product
+
+
+def delete_product(db: Session, product: models.Product) -> None:
+	db.delete(product)
+	db.commit()
+
+
+def upsert_products(db: Session, products: Iterable[schemas.ProductCreate]) -> dict:
+	inserted = 0
+	updated = 0
+	for payload in products:
+		existing = get_product_by_sku(db, payload.sku)
+		if existing is None:
+			create_product(db, payload)
+			inserted += 1
+		else:
+			update_product(
+				db,
+				existing,
+				schemas.ProductUpdate(
+					name=payload.name,
+					cost_price=payload.cost_price,
+					quantity=payload.quantity,
+					preset_price=payload.preset_price,
+					actual_price=payload.actual_price,
+				),
+			)
+			updated += 1
+	return {"inserted": inserted, "updated": updated}
 
 
 def create_order(db: Session, data: schemas.OrderCreate) -> models.Order:

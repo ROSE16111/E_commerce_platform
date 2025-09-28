@@ -65,8 +65,14 @@ Docker 就是一个 “软件容器”，可以把数据库、应用环境打包
 
 * main.py
 
-FastAPI 的入口文件，运行整个后端 API 的地方。
+FastAPI 的入口文件，运行整个后端 API 的地方。产品路由：列表、新增、查单个、更新、删除
 
-* migration
+* POST /products/import/csv：读取 CSV、校验表头、解析为 ProductCreate、批量 upsert
 
-数据库初始化数据。
+* crud.py
+  * GET /products 列表
+  * POST /products 新增
+  * GET /products/{sku} 查询单个
+  * PATCH /products/{sku} 更新
+  * DELETE /products/{sku} 删除
+  * POST /products/import/csv 导入CSV（multipart/form-data，字段名 file）
