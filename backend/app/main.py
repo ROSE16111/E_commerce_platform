@@ -11,6 +11,17 @@ from . import schemas, crud
 
 app = FastAPI(title="E-commerce ERP (Lite)")
 
+# CORS 问题（跨域）
+# FastAPI 默认没开跨域，前端直接 fetch 可能被浏览器拦截
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 或者只允许 ["http://localhost:3000"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def on_startup():
@@ -223,10 +234,11 @@ def import_orders_csv(file: UploadFile = File(...), db: Session = Depends(get_db
 
 
 # ==================== 报表模块 ====================
+from fastapi import Body
 
 @app.post("/reports/comprehensive", response_model=schemas.ReportResponse)
 def generate_comprehensive_report(
-	filters: schemas.ReportFilters = schemas.ReportFilters(),
+	filters: schemas.ReportFilters = Body(...),  # 明确告诉 FastAPI 从请求体读取
 	db: Session = Depends(get_db)
 ):
 	"""生成综合报表

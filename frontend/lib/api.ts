@@ -110,7 +110,7 @@ export const orderApi = {
 // 报表相关 API
 export const reportApi = {
   // 获取综合报表
-  getComprehensiveReport: (filters?: any) => api.post('/reports/comprehensive', filters || {}),
+  getComprehensiveReport: (filters?: any) =>  axios.post('http://localhost:8000/reports/comprehensive', filters),  // ✅ 用 post + body
   
   // 获取销售汇总
   getSalesSummary: (params?: any) => api.get('/reports/summary', { params }),

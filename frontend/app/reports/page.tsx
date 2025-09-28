@@ -90,6 +90,7 @@ export default function ReportsPage() {
       const response = await reportApi.getComprehensiveReport(filters)
       setReportData(response.data)
     } catch (error) {
+      toast.error("获取报表失败")
       console.error('获取报表数据失败:', error)
     } finally {
       setLoading(false)
