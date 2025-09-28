@@ -43,3 +43,13 @@ FastAPI/Django 哪个简单方便选哪个
 PostgreSQL
 * Deployment
 打算自己手动用Vercel,ai不用帮我
+
+# cursor to do list：
+1. Scaffold FastAPI backend with DB models and app entry
+2. Add Postgres via docker-compose for local development
+3. Implement Product module: CRUD and CSV import
+4. Implement Order module: create/list with inventory decrement and CSV import
+5. Implement Reports: sales, cost, profit with filters
+6. Initialize Next.js frontend with Tailwind and Recharts
+7. Build UI pages: Products, Orders, Reports; wire APIs
+8. Add sample CSVs and update README with usage steps

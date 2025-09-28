@@ -14,7 +14,11 @@
       },
       {
         "description": "文档大部分用中文写，但是代码和重点关键词用英文写",
-        "priority": "medium"
+        "priority": "high"
+      },
+      {
+        "description": "response用中文回答，关键词用中英文一起",
+        "priority": "high"
       }
     ]
   }

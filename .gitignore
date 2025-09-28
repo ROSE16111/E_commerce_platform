@@ -1,0 +1,94 @@
+# ------------------------------
+# Python bytecode and cache
+# ------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ------------------------------
+# Virtual environments
+# ------------------------------
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# ------------------------------
+# Build artifacts
+# ------------------------------
+build/
+dist/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
+
+# ------------------------------
+# Testing and coverage
+# ------------------------------
+.pytest_cache/
+.nox/
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# ------------------------------
+# Type checker / linters cache
+# ------------------------------
+.mypy_cache/
+.pytype/
+.pyre/
+.ruff_cache/
+
+# ------------------------------
+# Environment variables
+# ------------------------------
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# ------------------------------
+# Logs and runtime
+# ------------------------------
+*.log
+logs/
+
+# ------------------------------
+# Databases (local/dev)
+# ------------------------------
+*.sqlite3
+*.sqlite
+*.db
+pgdata/
+
+# ------------------------------
+# Docker
+# ------------------------------
+.docker/
+docker-compose.override.yml
+
+# ------------------------------
+# Editors / IDE
+# ------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ------------------------------
+# OS files
+# ------------------------------
+.DS_Store
+Thumbs.db
+
+# ------------------------------
+# Anticipated frontend (Next.js)
+# ------------------------------
+node_modules/
+.next/
+.out/
+.next.cache/
+**/.turbo/
