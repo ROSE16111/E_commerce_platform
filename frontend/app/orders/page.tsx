@@ -484,9 +484,14 @@ function OrderDetailModal({ order, products, onClose }: {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">订单详情</h3>
-        <div className="space-y-3">
+      <div className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[90vh] flex flex-col">
+        {/* 固定标题栏 */}
+        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
+          <h3 className="text-lg font-semibold">订单详情</h3>
+        </div>
+  
+        {/* 可滚动的内容区 */}
+        <div className="px-6 py-4 flex-1 overflow-y-auto space-y-3">
           <div>
             <label className="text-sm font-medium text-gray-500">订单号</label>
             <p className="font-mono">{order.order_number}</p>
@@ -538,14 +543,17 @@ function OrderDetailModal({ order, products, onClose }: {
             <p>{new Date(order.created_at).toLocaleString('zh-CN')}</p>
           </div>
         </div>
-        <div className="flex gap-2 pt-4">
-          <button onClick={onClose} className="btn-secondary flex-1">
+  
+        {/* 固定底部按钮 */}
+        <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0">
+          <button onClick={onClose} className="btn-secondary w-full">
             关闭
           </button>
         </div>
       </div>
     </div>
   )
+  
 }
 
 // CSV导入组件（复用）

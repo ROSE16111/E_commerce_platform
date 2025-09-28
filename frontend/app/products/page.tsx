@@ -262,18 +262,21 @@ function ProductModal({ product, onSubmit, onClose }: {
   const [formData, setFormData] = useState({
     sku: product?.sku || '',
     name: product?.name || '',
-    cost_price: product?.cost_price || 0,
-    quantity: product?.quantity || 0,
-    preset_price: product?.preset_price || '',
-    actual_price: product?.actual_price || '',
+    cost_price: product?.cost_price?.toString() || '',
+    quantity: product?.quantity?.toString() || '',
+    preset_price: product?.preset_price?.toString() || '',
+    actual_price: product?.actual_price?.toString() || '',
   })
+  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const submitData = {
       ...formData,
-      preset_price: formData.preset_price ? parseFloat(formData.preset_price) : null,
-      actual_price: formData.actual_price ? parseFloat(formData.actual_price) : null,
+      cost_price: formData.cost_price ? parseFloat(formData.cost_price) : 0,
+      quantity: formData.quantity ? parseInt(formData.quantity) : 0,
+      preset_price: formData.preset_price ? parseFloat(formData.preset_price) : 0,
+      actual_price: formData.actual_price ? parseFloat(formData.actual_price) : 0,
     }
     onSubmit(submitData)
   }
@@ -313,7 +316,7 @@ function ProductModal({ product, onSubmit, onClose }: {
               step="0.01"
               min="0"
               value={formData.cost_price}
-              onChange={(e) => setFormData({ ...formData, cost_price: parseFloat(e.target.value) || 0 })}
+              onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
               className="form-input"
               required
             />
@@ -324,7 +327,7 @@ function ProductModal({ product, onSubmit, onClose }: {
               type="number"
               min="0"
               value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
+              onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
               className="form-input"
               required
             />
