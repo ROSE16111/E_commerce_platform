@@ -83,3 +83,9 @@ POST /products/import/csv：读取 CSV、校验表头、解析为 ProductCreate�
   * GET /orders  - list_orders() - 获取订单列表（按时间倒序）
   * PATCH  /orders/{order_id}  - update_order() - 更新订单信息
   * DELETE /orders/{order_id} - delete_order() - 删除订单（带警告注释）
+  * POST /reports/comprehensive  - generate_comprehensive_report() # 生成综合报表
+  * GET  /reports/summary        - calculate_sales_summary()  # 销售汇总
+  * GET  /reports/channels      - calculate_channel_stats()  # 渠道统计
+  * GET  /reports/products     - calculate_product_stats()    # 商品统计  
+  * GET  /reports/timeseries  - calculate_time_series()        # 计算时间序列  
+  * GET get_orders_with_filters()      # 根据筛选条件获取订单

@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 import csv
 import io
+from datetime import datetime
+from typing import Optional, List
 
 from .database import Base, engine, get_db
 from . import schemas, crud
@@ -218,3 +220,165 @@ def import_orders_csv(file: UploadFile = File(...), db: Session = Depends(get_db
 		"total_rows": len(items),
 		**stats
 	}
+
+
+# ==================== 报表模块 ====================
+
+@app.post("/reports/comprehensive", response_model=schemas.ReportResponse)
+def generate_comprehensive_report(
+	filters: schemas.ReportFilters = schemas.ReportFilters(),
+	db: Session = Depends(get_db)
+):
+	"""生成综合报表
+	包含：
+	- 销售汇总（总销售额、成本、利润、订单数等）
+	- 渠道统计（各渠道销售情况）
+	- 商品统计（各商品销售排行）
+	- 时间序列数据（按日期统计）
+	
+	支持的筛选条件：
+	- 日期范围：start_date, end_date
+	- 渠道：channels (eBay/Facebook/other)
+	- 支付方式：payment_methods (cash/payid)
+	- 订单状态：statuses (pending/done)
+	- 商品SKU：product_skus
+	"""
+	return crud.generate_comprehensive_report(db, filters)
+
+
+@app.get("/reports/summary", response_model=schemas.SalesSummary)
+def get_sales_summary(
+	start_date: Optional[str] = None,
+	end_date: Optional[str] = None,
+	channels: Optional[str] = None,
+	payment_methods: Optional[str] = None,
+	statuses: Optional[str] = None,
+	product_skus: Optional[str] = None,
+	db: Session = Depends(get_db)
+):
+	"""获取销售汇总数据
+	查询参数：
+	- start_date: 开始日期 (YYYY-MM-DD)
+	- end_date: 结束日期 (YYYY-MM-DD)
+	- channels: 渠道，多个用逗号分隔 (eBay,Facebook,other)
+	- payment_methods: 支付方式，多个用逗号分隔 (cash,payid)
+	- statuses: 订单状态，多个用逗号分隔 (pending,done)
+	- product_skus: 商品SKU，多个用逗号分隔
+	"""
+	# 解析查询参数
+	filters = schemas.ReportFilters()
+	
+	if start_date:
+		filters.start_date = datetime.fromisoformat(start_date).date()
+	if end_date:
+		filters.end_date = datetime.fromisoformat(end_date).date()
+	
+	if channels:
+		filters.channels = [c.strip() for c in channels.split(",")]
+	if payment_methods:
+		filters.payment_methods = [p.strip() for p in payment_methods.split(",")]
+	if statuses:
+		filters.statuses = [s.strip() for s in statuses.split(",")]
+	if product_skus:
+		filters.product_skus = [s.strip() for s in product_skus.split(",")]
+	
+	return crud.calculate_sales_summary(db, filters)
+
+
+@app.get("/reports/channels", response_model=List[schemas.ChannelStats])
+def get_channel_stats(
+	start_date: Optional[str] = None,
+	end_date: Optional[str] = None,
+	channels: Optional[str] = None,
+	payment_methods: Optional[str] = None,
+	statuses: Optional[str] = None,
+	product_skus: Optional[str] = None,
+	db: Session = Depends(get_db)
+):
+	"""获取渠道统计数据
+	按渠道分组统计销售情况，按销售额降序排列
+	"""
+	# 解析查询参数
+	filters = schemas.ReportFilters()
+	
+	if start_date:
+		filters.start_date = datetime.fromisoformat(start_date).date()
+	if end_date:
+		filters.end_date = datetime.fromisoformat(end_date).date()
+	
+	if channels:
+		filters.channels = [c.strip() for c in channels.split(",")]
+	if payment_methods:
+		filters.payment_methods = [p.strip() for p in payment_methods.split(",")]
+	if statuses:
+		filters.statuses = [s.strip() for s in statuses.split(",")]
+	if product_skus:
+		filters.product_skus = [s.strip() for s in product_skus.split(",")]
+	
+	return crud.calculate_channel_stats(db, filters)
+
+
+@app.get("/reports/products", response_model=List[schemas.ProductStats])
+def get_product_stats(
+	start_date: Optional[str] = None,
+	end_date: Optional[str] = None,
+	channels: Optional[str] = None,
+	payment_methods: Optional[str] = None,
+	statuses: Optional[str] = None,
+	product_skus: Optional[str] = None,
+	db: Session = Depends(get_db)
+):
+	"""获取商品统计数据
+	按商品分组统计销售情况，按销售额降序排列
+	"""
+	# 解析查询参数
+	filters = schemas.ReportFilters()
+	
+	if start_date:
+		filters.start_date = datetime.fromisoformat(start_date).date()
+	if end_date:
+		filters.end_date = datetime.fromisoformat(end_date).date()
+	
+	if channels:
+		filters.channels = [c.strip() for c in channels.split(",")]
+	if payment_methods:
+		filters.payment_methods = [p.strip() for p in payment_methods.split(",")]
+	if statuses:
+		filters.statuses = [s.strip() for s in statuses.split(",")]
+	if product_skus:
+		filters.product_skus = [s.strip() for s in product_skus.split(",")]
+	
+	return crud.calculate_product_stats(db, filters)
+
+
+@app.get("/reports/timeseries", response_model=List[schemas.TimeSeriesData])
+def get_time_series_data(
+	start_date: Optional[str] = None,
+	end_date: Optional[str] = None,
+	channels: Optional[str] = None,
+	payment_methods: Optional[str] = None,
+	statuses: Optional[str] = None,
+	product_skus: Optional[str] = None,
+	db: Session = Depends(get_db)
+):
+	"""获取时间序列数据
+	按日期分组统计销售情况，用于绘制趋势图
+	"""
+	# 解析查询参数
+	filters = schemas.ReportFilters()
+	
+	if start_date:
+		filters.start_date = datetime.fromisoformat(start_date).date()
+	if end_date:
+		filters.end_date = datetime.fromisoformat(end_date).date()
+	
+	if channels:
+		filters.channels = [c.strip() for c in channels.split(",")]
+	if payment_methods:
+		filters.payment_methods = [p.strip() for p in payment_methods.split(",")]
+	if statuses:
+		filters.statuses = [s.strip() for s in statuses.split(",")]
+	if product_skus:
+		filters.product_skus = [s.strip() for s in product_skus.split(",")]
+	
+	return crud.calculate_time_series(db, filters)
