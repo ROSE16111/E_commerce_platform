@@ -35,7 +35,15 @@ api.interceptors.response.use(
   (error) => {
     // 统一错误处理
     if (error.response) {
-      const message = error.response.data?.detail || error.response.data?.message || '请求失败'
+      const detail = error.response.data?.detail
+      let message = '请求失败'
+      if (Array.isArray(detail)) {
+        message = detail.map((d: any) => d.msg).join('；')
+      } else if (typeof detail === 'string') {
+        message = detail
+      } else if (error.response.data?.message) {
+        message = error.response.data.message
+      }
       toast.error(message)
     } else if (error.request) {
       toast.error('网络连接失败，请检查后端服务是否启动')
@@ -110,7 +118,7 @@ export const orderApi = {
 // 报表相关 API
 export const reportApi = {
   // 获取综合报表
-  getComprehensiveReport: (filters?: any) =>  axios.post('http://localhost:8000/reports/comprehensive', filters),  // ✅ 用 post + body
+  getComprehensiveReport: (filters?: any) =>   api.post("/reports/comprehensive", filters),
   
   // 获取销售汇总
   getSalesSummary: (params?: any) => api.get('/reports/summary', { params }),

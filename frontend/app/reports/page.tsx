@@ -87,7 +87,13 @@ export default function ReportsPage() {
   const fetchReportData = async () => {
     try {
       setLoading(true)
-      const response = await reportApi.getComprehensiveReport(filters)
+  
+      // 过滤掉空字符串
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([_, v]) => v !== '')
+      )
+  
+      const response = await reportApi.getComprehensiveReport(cleanFilters)
       setReportData(response.data)
     } catch (error) {
       toast.error("获取报表失败")
@@ -96,6 +102,7 @@ export default function ReportsPage() {
       setLoading(false)
     }
   }
+  
 
   useEffect(() => {
     fetchReportData()

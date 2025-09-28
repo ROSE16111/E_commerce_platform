@@ -193,3 +193,151 @@ def upsert_orders(db: Session, orders: Iterable[schemas.OrderCreate]) -> dict:
         "errors": errors,
         "total_processed": inserted + skipped + len(errors)
     }
+from datetime import datetime
+from collections import defaultdict
+from . import models, schemas
+
+def generate_comprehensive_report(db, filters: schemas.ReportFilters):
+    """
+    生成综合报表
+    - 汇总统计
+    - 渠道统计
+    - 商品统计
+    - 时间序列统计
+    """
+
+    query = db.query(models.Order).join(models.Product, models.Order.product_id == models.Product.id)
+
+    # ===== 应用筛选条件 =====
+    if filters.start_date:
+        query = query.filter(models.Order.transaction_date >= filters.start_date)
+    if filters.end_date:
+        query = query.filter(models.Order.transaction_date <= filters.end_date)
+    if filters.channels and len(filters.channels) > 0:
+        query = query.filter(models.Order.channel.in_(filters.channels))
+    if filters.payment_methods and len(filters.payment_methods) > 0:
+        query = query.filter(models.Order.payment_method.in_(filters.payment_methods))
+    if filters.statuses and len(filters.statuses) > 0:
+        query = query.filter(models.Order.status.in_(filters.statuses))
+    if filters.product_skus and len(filters.product_skus) > 0:
+        query = query.filter(models.Product.sku.in_(filters.product_skus))   # ✅ 改成从 Product 表里筛 SKU
+
+    orders = query.all()
+
+    # ===== 汇总统计 =====
+    total_sales = sum(float(o.actual_price) * o.quantity for o in orders)
+    total_cost = sum(float(o.product.cost_price) * o.quantity for o in orders if o.product)
+    total_profit = sum(float(o.profit) for o in orders)
+    total_orders = len(orders)
+    total_quantity = sum(o.quantity for o in orders)
+    profit_margin = (total_profit / total_sales * 100) if total_sales > 0 else 0
+
+    summary = schemas.SalesSummary(
+        total_sales=total_sales,
+        total_cost=total_cost,
+        total_profit=total_profit,
+        total_orders=total_orders,
+        total_quantity=total_quantity,
+        profit_margin=profit_margin,
+    )
+
+    # ===== 渠道统计 =====
+    channel_stats_dict = defaultdict(lambda: {
+        "total_sales": 0.0,
+        "total_cost": 0.0,
+        "total_profit": 0.0,
+        "order_count": 0,
+        "quantity": 0,
+    })
+
+    for o in orders:
+        cs = channel_stats_dict[o.channel]
+        cs["total_sales"] += float(o.actual_price) * o.quantity
+        cs["total_cost"] += float(o.product.cost_price) * o.quantity if o.product else 0
+        cs["total_profit"] += float(o.profit)
+        cs["order_count"] += 1
+        cs["quantity"] += o.quantity
+
+    channel_stats = [
+        schemas.ChannelStats(
+            channel=channel,
+            total_sales=data["total_sales"],
+            total_cost=data["total_cost"],
+            total_profit=data["total_profit"],
+            order_count=data["order_count"],
+            profit_margin=(data["total_profit"] / data["total_sales"] * 100) if data["total_sales"] > 0 else 0,
+        )
+        for channel, data in channel_stats_dict.items()
+    ]
+
+    # ===== 商品统计 =====
+    product_stats_dict = defaultdict(lambda: {
+        "product_name": "",
+        "total_sales": 0.0,
+        "total_cost": 0.0,
+        "total_profit": 0.0,
+        "quantity_sold": 0,
+        "order_count": 0,
+    })
+
+    for o in orders:
+        sku = o.product.sku if o.product else "未知SKU"   # ✅ 从 Product 拿 SKU
+        ps = product_stats_dict[sku]
+        ps["product_name"] = o.product.name if o.product else "未知商品"
+        ps["total_sales"] += float(o.actual_price) * o.quantity
+        ps["total_cost"] += float(o.product.cost_price) * o.quantity if o.product else 0
+        ps["total_profit"] += float(o.profit)
+        ps["quantity_sold"] += o.quantity
+        ps["order_count"] += 1
+
+    product_stats = [
+        schemas.ProductStats(
+            product_sku=sku,
+            product_name=data["product_name"],
+            total_sales=data["total_sales"],
+            total_cost=data["total_cost"],
+            total_profit=data["total_profit"],
+            quantity_sold=data["quantity_sold"],
+            order_count=data["order_count"],
+            profit_margin=(data["total_profit"] / data["total_sales"] * 100) if data["total_sales"] > 0 else 0,
+        )
+        for sku, data in product_stats_dict.items()
+    ]
+
+    # ===== 时间序列统计（按天） =====
+    time_series_dict = defaultdict(lambda: {
+        "total_sales": 0.0,
+        "total_cost": 0.0,
+        "total_profit": 0.0,
+        "order_count": 0,
+    })
+
+    for o in orders:
+        if o.transaction_date:
+            day = o.transaction_date.date().isoformat()
+            ts = time_series_dict[day]
+            ts["total_sales"] += float(o.actual_price) * o.quantity
+            ts["total_cost"] += float(o.product.cost_price) * o.quantity if o.product else 0
+            ts["total_profit"] += float(o.profit)
+            ts["order_count"] += 1
+
+    time_series = [
+        schemas.TimeSeriesData(
+            date=day,
+            total_sales=data["total_sales"],
+            total_cost=data["total_cost"],
+            total_profit=data["total_profit"],
+            order_count=data["order_count"],
+        )
+        for day, data in sorted(time_series_dict.items())
+    ]
+
+    # ===== 最终响应 =====
+    return schemas.ReportResponse(
+        summary=summary,
+        channel_stats=channel_stats,
+        product_stats=product_stats,
+        time_series=time_series,
+        filters_applied=filters,
+        generated_at=datetime.utcnow(),
+    )

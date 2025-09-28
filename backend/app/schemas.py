@@ -85,17 +85,23 @@ class OrderOut(BaseModel):
 
 
 # ==================== 报表 Schemas ====================
-
+from pydantic import BaseModel, Field, validator
+from typing import Optional, List
+from datetime import date
 class ReportFilters(BaseModel):
-    """报表筛选条件"""
     start_date: Optional[date] = None
     end_date: Optional[date] = None
-    channels: Optional[List[Channel]] = None
-    payment_methods: Optional[List[PaymentMethod]] = None
-    statuses: Optional[List[OrderStatus]] = None
+    channels: Optional[List[str]] = None
+    payment_methods: Optional[List[str]] = None
+    statuses: Optional[List[str]] = None
     product_skus: Optional[List[str]] = None
     group_by: Optional[str] = Field(default="day", description="day/week/month/channel/product")
 
+    @validator("start_date", "end_date", pre=True)
+    def empty_str_to_none(cls, v):
+        if v == "":
+            return None
+        return v
 
 class SalesSummary(BaseModel):
     """销售汇总"""
