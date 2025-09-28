@@ -244,7 +244,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="table-cell">
                         <span className={`badge ${getStatusBadge(order.status)}`}>
-                          {order.status === 'done' ? '已完成' : '待处理'}
+                          {order.status === 'done' ? '已完成' : 'pending'}
                         </span>
                       </td>
                       <td className="table-cell">
@@ -331,8 +331,8 @@ function OrderModal({ order, products, onSubmit, onClose }: {
   const [formData, setFormData] = useState({
     order_number: order?.order_number || '',
     product_sku: '',
-    actual_price: order?.actual_price || 0,
-    quantity: order?.quantity || 1,
+    actual_price: order ? order.actual_price.toString() : '', // 改为字符串
+    quantity: order ? order.quantity.toString() : '',         // 改为字符串
     payment_method: order?.payment_method || 'cash',
     channel: order?.channel || 'eBay',
     status: order?.status || 'pending',
@@ -342,11 +342,14 @@ function OrderModal({ order, products, onSubmit, onClose }: {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
     const submitData = {
       ...formData,
-      actual_price: parseFloat(formData.actual_price.toString()),
-      quantity: parseInt(formData.quantity.toString()),
-      transaction_date: formData.transaction_date ? new Date(formData.transaction_date).toISOString() : null,
+      actual_price: formData.actual_price ? parseFloat(formData.actual_price) : 0,
+      quantity: formData.quantity ? parseInt(formData.quantity) : 0,
+      transaction_date: formData.transaction_date 
+        ? new Date(formData.transaction_date).toISOString() 
+        : null,
     }
     onSubmit(submitData)
   }
@@ -358,6 +361,8 @@ function OrderModal({ order, products, onSubmit, onClose }: {
           {order ? '编辑订单' : '新增订单'}
         </h3>
         <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* 订单号 */}
           <div>
             <label className="form-label">订单号 *</label>
             <input
@@ -366,25 +371,40 @@ function OrderModal({ order, products, onSubmit, onClose }: {
               onChange={(e) => setFormData({ ...formData, order_number: e.target.value })}
               className="form-input"
               required
-              disabled={!!order}
+              disabled={!!order}  // 编辑时锁死
             />
           </div>
+
+          {/* 商品 */}
           <div>
-            <label className="form-label">商品SKU *</label>
-            <select
-              value={formData.product_sku}
-              onChange={(e) => setFormData({ ...formData, product_sku: e.target.value })}
-              className="form-input"
-              required
-            >
-              <option value="">选择商品</option>
-              {products.map(product => (
-                <option key={product.sku} value={product.sku}>
-                  {product.sku} - {product.name} (库存: {product.quantity})
-                </option>
-              ))}
-            </select>
+            <label className="form-label">商品 *</label>
+            {order ? (
+              // 编辑时：显示锁死的商品名称和 SKU
+              <input
+                type="text"
+                value={`${products.find(p => p.id === order.product_id)?.name || ''} (${products.find(p => p.id === order.product_id)?.sku || ''})`}
+                className="form-input"
+                disabled
+              />
+            ) : (
+              // 新建时：下拉选择
+              <select
+                value={formData.product_sku}
+                onChange={(e) => setFormData({ ...formData, product_sku: e.target.value })}
+                className="form-input"
+                required
+              >
+                <option value="">选择商品</option>
+                {products.map(product => (
+                  <option key={product.sku} value={product.sku}>
+                    {product.sku} - {product.name} (库存: {product.quantity})
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
+
+          {/* 实际售价 */}
           <div>
             <label className="form-label">实际售价 *</label>
             <input
@@ -392,22 +412,26 @@ function OrderModal({ order, products, onSubmit, onClose }: {
               step="0.01"
               min="0"
               value={formData.actual_price}
-              onChange={(e) => setFormData({ ...formData, actual_price: parseFloat(e.target.value) || 0 })}
+              onChange={(e) => setFormData({ ...formData, actual_price: e.target.value })}
               className="form-input"
               required
             />
           </div>
+
+          {/* 数量 */}
           <div>
             <label className="form-label">数量 *</label>
             <input
               type="number"
               min="1"
               value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+              onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
               className="form-input"
               required
             />
           </div>
+
+          {/* 支付方式 */}
           <div>
             <label className="form-label">支付方式 *</label>
             <select
@@ -420,6 +444,8 @@ function OrderModal({ order, products, onSubmit, onClose }: {
               <option value="payid">PayID</option>
             </select>
           </div>
+
+          {/* 销售渠道 */}
           <div>
             <label className="form-label">销售渠道 *</label>
             <select
@@ -433,6 +459,8 @@ function OrderModal({ order, products, onSubmit, onClose }: {
               <option value="other">其他</option>
             </select>
           </div>
+
+          {/* 订单状态 */}
           <div>
             <label className="form-label">订单状态 *</label>
             <select
@@ -445,6 +473,8 @@ function OrderModal({ order, products, onSubmit, onClose }: {
               <option value="done">已完成</option>
             </select>
           </div>
+
+          {/* 买家姓名 */}
           <div>
             <label className="form-label">买家姓名</label>
             <input
@@ -454,6 +484,8 @@ function OrderModal({ order, products, onSubmit, onClose }: {
               className="form-input"
             />
           </div>
+
+          {/* 交易日期 */}
           <div>
             <label className="form-label">交易日期</label>
             <input
@@ -463,6 +495,8 @@ function OrderModal({ order, products, onSubmit, onClose }: {
               className="form-input"
             />
           </div>
+
+          {/* 按钮 */}
           <div className="flex gap-2 pt-4">
             <button type="submit" className="btn-success flex-1">
               {order ? '更新' : '创建'}
