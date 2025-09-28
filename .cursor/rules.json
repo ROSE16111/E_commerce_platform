@@ -1,0 +1,21 @@
+{
+    "rules": [
+      {
+        "description": "把开发一个模块的注意事项列出来，（详细到文件路径，命名，类型规范，需要用的工具类等等）写成文档",
+        "priority": "high"
+      },
+      {
+        "description": "每个工作开始做之前先写个计划，列出详细的todo。详细解释为什么这么做。并且时刻根据文档，每一步都先让你做决定再进行改动",
+        "priority": "high"
+      },
+      {
+        "description": "所有函数都要写 docstring 注释",
+        "priority": "medium"
+      },
+      {
+        "description": "文档大部分用中文写，但是代码和重点关键词用英文写",
+        "priority": "medium"
+      }
+    ]
+  }
+  
