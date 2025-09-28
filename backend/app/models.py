@@ -46,6 +46,7 @@ class Order(Base):
 	buyer_name = Column(String(255), nullable=True)
 	actual_price = Column(Numeric(12, 2), nullable=False)
 	quantity = Column(Integer, nullable=False, default=1)
+	profit = Column(Numeric(12, 2), nullable=False, default=0)
 
 	payment_method = Column(Enum(PaymentMethod), nullable=False)
 	channel = Column(Enum(Channel), nullable=False)

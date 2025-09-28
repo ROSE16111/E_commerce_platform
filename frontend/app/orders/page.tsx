@@ -22,6 +22,7 @@ interface Order {
   buyer_name?: string
   actual_price: number
   quantity: number
+  profit: number
   payment_method: 'cash' | 'payid'
   channel: 'eBay' | 'Facebook' | 'other'
   status: 'pending' | 'done'
@@ -197,6 +198,7 @@ export default function OrdersPage() {
                   <th className="table-header-cell">商品SKU</th>
                   <th className="table-header-cell">数量</th>
                   <th className="table-header-cell">售价</th>
+                  <th className="table-header-cell">利润</th>
                   <th className="table-header-cell">渠道</th>
                   <th className="table-header-cell">状态</th>
                   <th className="table-header-cell">操作</th>
@@ -205,7 +207,7 @@ export default function OrdersPage() {
               <tbody className="table-body">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="table-cell text-center py-8">
+                    <td colSpan={10} className="table-cell text-center py-8">
                       <div className="flex items-center justify-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-success-600"></div>
                         <span className="ml-2">加载中...</span>
@@ -234,6 +236,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="table-cell">{order.quantity}</td>
                       <td className="table-cell font-medium">¥{order.actual_price.toFixed(2)}</td>
+                      <td className="table-cell font-medium text-success-600">¥{order.profit.toFixed(2)}</td>
                       <td className="table-cell">
                         <span className={`badge ${getChannelBadge(order.channel)}`}>
                           {order.channel}
@@ -514,9 +517,7 @@ function OrderDetailModal({ order, products, onClose }: {
           </div>
           <div>
             <label className="text-sm font-medium text-gray-500">利润</label>
-            <p className="font-medium text-success-600">
-              ¥{product ? (order.actual_price * order.quantity - product.cost_price * order.quantity).toFixed(2) : 'N/A'}
-            </p>
+            <p className="font-medium text-success-600">¥{order.profit.toFixed(2)}</p>
           </div>
           <div>
             <label className="text-sm font-medium text-gray-500">渠道</label>

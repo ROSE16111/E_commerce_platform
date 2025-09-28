@@ -344,7 +344,7 @@ function ProductModal({ product, onSubmit, onClose }: {
             />
           </div>
           <div>
-            <label className="form-label">实际售价</label>
+            <label className="form-label">最新售价</label>
             <input
               type="number"
               step="0.01"
