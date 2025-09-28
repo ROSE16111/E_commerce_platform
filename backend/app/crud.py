@@ -4,7 +4,7 @@ from . import models, schemas
 from datetime import datetime, date, timedelta
 from typing import Iterable, List, Dict, Any
 from decimal import Decimal
-
+from fastapi import HTTPException
 
 def create_product(db: Session, data: schemas.ProductCreate) -> models.Product:
 	"""创建商品"""
@@ -79,9 +79,10 @@ def create_order(db: Session, data: schemas.OrderCreate) -> models.Order:
 	"""创建订单（自动扣减库存）"""
 	product = get_product_by_sku(db, data.product_sku)
 	if product is None:
-		raise ValueError("Product with given SKU not found")
+		raise HTTPException(status_code=400, detail="不存在该商品")
 	if product.quantity < data.quantity:
-		raise ValueError("Insufficient inventory")
+		raise HTTPException(status_code=400, detail="库存不足")
+
 
 	order = models.Order(
 		order_number=data.order_number,
@@ -124,19 +125,17 @@ def list_orders(db: Session) -> list[models.Order]:
 	return list(db.execute(stmt).scalars().all())
 
 
-def update_order(db: Session, order: models.Order, data: schemas.OrderUpdate) -> models.Order:
-	"""更新订单信息"""
-	for field, value in data.model_dump(exclude_unset=True).items():
-		setattr(order, field, value)
-	db.add(order)
-	db.commit()
-	db.refresh(order)
-	return order
-
-
 def delete_order(db: Session, order: models.Order) -> None:
-	"""删除订单（注意：删除订单不会恢复库存，需要谨慎操作）"""
+	"""删除订单并自动恢复库存"""
+	# 恢复商品库存
+	product = order.product
+	product.quantity = product.quantity + order.quantity
+	
+	# 删除订单
 	db.delete(order)
+	
+	# 保存商品库存更新
+	db.add(product)
 	db.commit()
 
 
@@ -449,37 +448,6 @@ def upsert_products(db: Session, products: Iterable[schemas.ProductCreate]) -> d
 			updated += 1
 	return {"inserted": inserted, "updated": updated}
 
-
-def create_order(db: Session, data: schemas.OrderCreate) -> models.Order:
-	product = get_product_by_sku(db, data.product_sku)
-	if product is None:
-		raise ValueError("Product with given SKU not found")
-	if product.quantity < data.quantity:
-		raise ValueError("Insufficient inventory")
-
-	order = models.Order(
-		order_number=data.order_number,
-		created_at=datetime.utcnow(),
-		transaction_date=data.transaction_date,
-		buyer_name=data.buyer_name,
-		actual_price=data.actual_price,
-		quantity=data.quantity,
-		payment_method=data.payment_method,
-		channel=data.channel,
-		status=data.status,
-		product_id=product.id,
-	)
-
-	product.quantity = product.quantity - data.quantity
-	product.actual_price = data.actual_price
-
-	db.add(order)
-	db.add(product)
-	db.commit()
-	db.refresh(order)
-	return order
-
-
 def get_order_by_id(db: Session, order_id: int) -> models.Order | None:
 	"""根据订单ID查询单个订单"""
 	stmt = select(models.Order).where(models.Order.id == order_id)
@@ -497,48 +465,42 @@ def list_orders(db: Session) -> list[models.Order]:
 	stmt = select(models.Order).order_by(models.Order.id.desc())
 	return list(db.execute(stmt).scalars().all())
 
-
+from fastapi import HTTPException
 def update_order(db: Session, order: models.Order, data: schemas.OrderUpdate) -> models.Order:
-	"""更新订单信息"""
-	for field, value in data.model_dump(exclude_unset=True).items():
-		setattr(order, field, value)
-	db.add(order)
-	db.commit()
-	db.refresh(order)
-	return order
+    """更新订单信息并调整库存"""
+    product = order.product
 
+    # 如果数量有变化，调整库存
+    if data.quantity is not None and data.quantity != order.quantity:
+        diff = data.quantity - order.quantity  # 新数量 - 原数量
+
+        if diff > 0:  # 订单数量增加
+            if product.quantity < diff:
+                raise HTTPException(status_code=400, detail="库存不足")
+            product.quantity -= diff
+        else:  # 订单数量减少
+            product.quantity += abs(diff)
+
+    # 更新订单字段
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(order, field, value)
+
+    db.add(order)
+    db.add(product)  # 记得加回 product
+    db.commit()
+    db.refresh(order)
+    return order
 
 def delete_order(db: Session, order: models.Order) -> None:
-	"""删除订单（注意：删除订单不会恢复库存，需要谨慎操作）"""
+	"""删除订单并自动恢复库存"""
+	# 恢复商品库存
+	product = order.product
+	product.quantity = product.quantity + order.quantity
+	
+	# 删除订单
 	db.delete(order)
+	
+	# 保存商品库存更新
+	db.add(product)
 	db.commit()
 
-
-def upsert_orders(db: Session, orders: Iterable[schemas.OrderCreate]) -> dict:
-	"""批量导入订单（CSV导入用）
-	注意：如果订单号已存在，会跳过该订单以避免重复
-	"""
-	inserted = 0
-	skipped = 0
-	errors = []
-	
-	for payload in orders:
-		try:
-			# 检查订单号是否已存在
-			existing = get_order_by_number(db, payload.order_number)
-			if existing is not None:
-				skipped += 1
-				continue
-				
-			# 创建新订单（会自动扣减库存）
-			create_order(db, payload)
-			inserted += 1
-		except ValueError as e:
-			errors.append(f"订单 {payload.order_number}: {str(e)}")
-	
-	return {
-		"inserted": inserted, 
-		"skipped": skipped, 
-		"errors": errors,
-		"total_processed": inserted + skipped + len(errors)
-	}

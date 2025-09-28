@@ -19,6 +19,7 @@
   * 字段：订单号，创建日期，交易日期，买家名字，实际售价，支付方式（cash/payid）, 渠道标记（eBay/Facebook/other），状态（pending/done）,商品，商品数量
   * logic:
     * 新订单创建→ 库存减少
+    * 删除订单→ 库存自动恢复
     * 每单都与商品 SKU 关联
 * 简单报表 （Report & Analytics Module）
 * 计算：

@@ -87,7 +87,7 @@ export default function OrdersPage() {
 
   // 删除订单
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除这个订单吗？删除后不会恢复库存！')) return
+    if (!confirm('确定要删除这个订单吗？删除后会自动恢复库存。')) return
     
     try {
       await orderApi.deleteOrder(id)
