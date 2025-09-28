@@ -98,6 +98,65 @@ def create_order(db: Session, data: schemas.OrderCreate) -> models.Order:
 	return order
 
 
+def get_order_by_id(db: Session, order_id: int) -> models.Order | None:
+	"""根据订单ID查询单个订单"""
+	stmt = select(models.Order).where(models.Order.id == order_id)
+	return db.execute(stmt).scalar_one_or_none()
+
+
+def get_order_by_number(db: Session, order_number: str) -> models.Order | None:
+	"""根据订单号查询单个订单"""
+	stmt = select(models.Order).where(models.Order.order_number == order_number)
+	return db.execute(stmt).scalar_one_or_none()
+
+
 def list_orders(db: Session) -> list[models.Order]:
+	"""获取所有订单列表，按创建时间倒序"""
 	stmt = select(models.Order).order_by(models.Order.id.desc())
 	return list(db.execute(stmt).scalars().all())
+
+
+def update_order(db: Session, order: models.Order, data: schemas.OrderUpdate) -> models.Order:
+	"""更新订单信息"""
+	for field, value in data.model_dump(exclude_unset=True).items():
+		setattr(order, field, value)
+	db.add(order)
+	db.commit()
+	db.refresh(order)
+	return order
+
+
+def delete_order(db: Session, order: models.Order) -> None:
+	"""删除订单（注意：删除订单不会恢复库存，需要谨慎操作）"""
+	db.delete(order)
+	db.commit()
+
+
+def upsert_orders(db: Session, orders: Iterable[schemas.OrderCreate]) -> dict:
+	"""批量导入订单（CSV导入用）
+	注意：如果订单号已存在，会跳过该订单以避免重复
+	"""
+	inserted = 0
+	skipped = 0
+	errors = []
+	
+	for payload in orders:
+		try:
+			# 检查订单号是否已存在
+			existing = get_order_by_number(db, payload.order_number)
+			if existing is not None:
+				skipped += 1
+				continue
+				
+			# 创建新订单（会自动扣减库存）
+			create_order(db, payload)
+			inserted += 1
+		except ValueError as e:
+			errors.append(f"订单 {payload.order_number}: {str(e)}")
+	
+	return {
+		"inserted": inserted, 
+		"skipped": skipped, 
+		"errors": errors,
+		"total_processed": inserted + skipped + len(errors)
+	}

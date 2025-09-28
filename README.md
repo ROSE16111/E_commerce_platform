@@ -16,7 +16,7 @@
     * 库存自动随订单减少
 * 订单录入（Order Module）
   * 支持“手动录入订单”或 支持“导入 CSV（eBay / PayPal）
-  * 字段：订单号，创建日期，交易日期，买家名字，实际售价，支付方式（cash/payid）, 渠道标记（eBay/Facebook/other），状态（pending/done）
+  * 字段：订单号，创建日期，交易日期，买家名字，实际售价，支付方式（cash/payid）, 渠道标记（eBay/Facebook/other），状态（pending/done）,商品，商品数量
   * logic:
     * 新订单创建→ 库存减少
     * 每单都与商品 SKU 关联
@@ -56,7 +56,7 @@ PostgreSQL
 
 ## 
 * 导入 CSV 模板与规则
-upsert_products
+  * upsert_products
 
 必填表头: sku,name,cost_price,quantity
 可选表头: preset_price,actual_price
@@ -69,4 +69,11 @@ SKU002,Cap,10,50,19.9,18.0
 ```
 导入为“幂等”式：已存在 SKU 将更新，不存在则创建。返回统计 inserted/updated
 
+  * upsert_orders
+必填字段 order_number, product_sku, actual_price, quantity, payment_method, channel, status
+```
+order_number,product_sku,actual_price,quantity,payment_method,channel,status,transaction_date,buyer_name
+ORD001,SKU001,39.9,2,cash,eBay,done,2024-01-15,张三
+ORD002,SKU002,19.9,1,payid,Facebook,pending,2024-01-16,李四
+```
 * .gitignore: 忽略缓存、虚拟环境、日志、Docker、前端 node_modules 等

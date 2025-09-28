@@ -49,6 +49,17 @@ class OrderCreate(OrderBase):
 	pass
 
 
+class OrderUpdate(BaseModel):
+	"""订单更新模型 - 允许部分字段更新"""
+	transaction_date: Optional[datetime] = None
+	buyer_name: Optional[str] = None
+	actual_price: Optional[float] = Field(default=None, ge=0)
+	quantity: Optional[int] = Field(default=None, ge=1)
+	payment_method: Optional[PaymentMethod] = None
+	channel: Optional[Channel] = None
+	status: Optional[OrderStatus] = None
+
+
 class OrderOut(BaseModel):
 	id: int
 	order_number: str

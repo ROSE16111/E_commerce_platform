@@ -94,6 +94,11 @@ def import_products_csv(file: UploadFile = File(...), db: Session = Depends(get_
 # Orders
 @app.post("/orders", response_model=schemas.OrderOut)
 def create_order(payload: schemas.OrderCreate, db: Session = Depends(get_db)):
+	"""创建新订单
+	- 自动扣减商品库存
+	- 更新商品的 actual_price 为订单价格
+	- 如果库存不足会返回错误
+	"""
 	try:
 		return crud.create_order(db, payload)
 	except ValueError as e:
@@ -102,4 +107,114 @@ def create_order(payload: schemas.OrderCreate, db: Session = Depends(get_db)):
 
 @app.get("/orders", response_model=list[schemas.OrderOut])
 def list_orders(db: Session = Depends(get_db)):
+	"""获取所有订单列表，按创建时间倒序"""
 	return crud.list_orders(db)
+
+
+@app.get("/orders/{order_id}", response_model=schemas.OrderOut)
+def get_order(order_id: int, db: Session = Depends(get_db)):
+	"""根据订单ID查询单个订单"""
+	order = crud.get_order_by_id(db, order_id)
+	if not order:
+		raise HTTPException(status_code=404, detail="Order not found")
+	return order
+
+
+@app.get("/orders/by-number/{order_number}", response_model=schemas.OrderOut)
+def get_order_by_number(order_number: str, db: Session = Depends(get_db)):
+	"""根据订单号查询单个订单"""
+	order = crud.get_order_by_number(db, order_number)
+	if not order:
+		raise HTTPException(status_code=404, detail="Order not found")
+	return order
+
+
+@app.patch("/orders/{order_id}", response_model=schemas.OrderOut)
+def update_order(order_id: int, payload: schemas.OrderUpdate, db: Session = Depends(get_db)):
+	"""更新订单信息
+	注意：更新订单不会影响库存，如需调整库存请单独处理商品
+	"""
+	order = crud.get_order_by_id(db, order_id)
+	if not order:
+		raise HTTPException(status_code=404, detail="Order not found")
+	return crud.update_order(db, order, payload)
+
+
+@app.delete("/orders/{order_id}", status_code=204)
+def delete_order(order_id: int, db: Session = Depends(get_db)):
+	"""删除订单
+	警告：删除订单不会恢复库存，请谨慎操作
+	"""
+	order = crud.get_order_by_id(db, order_id)
+	if not order:
+		raise HTTPException(status_code=404, detail="Order not found")
+	crud.delete_order(db, order)
+	return None
+
+
+@app.post("/orders/import/csv")
+def import_orders_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+	"""批量导入订单CSV文件
+	支持的CSV格式：
+	- 必填字段：order_number, product_sku, actual_price, quantity, payment_method, channel, status
+	- 可选字段：transaction_date, buyer_name
+	- 如果订单号已存在会跳过该订单
+	- 如果商品SKU不存在或库存不足会记录错误
+	"""
+	if not file.filename.lower().endswith(".csv"):
+		raise HTTPException(status_code=400, detail="Only CSV files are supported")
+	
+	content = file.file.read().decode("utf-8-sig")
+	reader = csv.DictReader(io.StringIO(content))
+	
+	# 检查必填字段
+	required = {"order_number", "product_sku", "actual_price", "quantity", "payment_method", "channel", "status"}
+	missing = required - set([h.strip() for h in reader.fieldnames or []])
+	if missing:
+		raise HTTPException(status_code=400, detail=f"Missing required headers: {', '.join(sorted(missing))}")
+
+	items: list[schemas.OrderCreate] = []
+	row_index = 1
+	
+	for row in reader:
+		row_index += 1
+		try:
+			# 解析日期字段（如果存在）
+			transaction_date = None
+			if row.get("transaction_date"):
+				try:
+					transaction_date = datetime.fromisoformat(row["transaction_date"].replace("Z", "+00:00"))
+				except ValueError:
+					# 尝试其他日期格式
+					from datetime import datetime
+					for fmt in ["%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%d/%m/%Y"]:
+						try:
+							transaction_date = datetime.strptime(row["transaction_date"], fmt)
+							break
+						except ValueError:
+							continue
+					if transaction_date is None:
+						raise ValueError(f"Invalid date format: {row['transaction_date']}")
+			
+			payload = schemas.OrderCreate(
+				order_number=row.get("order_number", "").strip(),
+				transaction_date=transaction_date,
+				buyer_name=row.get("buyer_name", "").strip() or None,
+				actual_price=float(row.get("actual_price", 0) or 0),
+				quantity=int(row.get("quantity", 1) or 1),
+				payment_method=row.get("payment_method", "").strip().lower(),
+				channel=row.get("channel", "").strip(),
+				status=row.get("status", "").strip().lower(),
+				product_sku=row.get("product_sku", "").strip(),
+			)
+			items.append(payload)
+		except Exception as e:
+			raise HTTPException(status_code=400, detail=f"Row {row_index} invalid: {e}")
+
+	# 批量处理订单
+	stats = crud.upsert_orders(db, items)
+	return {
+		"message": "CSV import completed",
+		"total_rows": len(items),
+		**stats
+	}

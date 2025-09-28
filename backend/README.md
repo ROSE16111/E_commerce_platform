@@ -67,7 +67,7 @@ Docker 就是一个 “软件容器”，可以把数据库、应用环境打包
 
 FastAPI 的入口文件，运行整个后端 API 的地方。产品路由：列表、新增、查单个、更新、删除
 
-* POST /products/import/csv：读取 CSV、校验表头、解析为 ProductCreate、批量 upsert
+POST /products/import/csv：读取 CSV、校验表头、解析为 ProductCreate、批量 upsert
 
 * crud.py
   * GET /products 列表
@@ -76,3 +76,10 @@ FastAPI 的入口文件，运行整个后端 API 的地方。产品路由：列�
   * PATCH /products/{sku} 更新
   * DELETE /products/{sku} 删除
   * POST /products/import/csv 导入CSV（multipart/form-data，字段名 file）
+  * POST /orders 新增
+  * POST /orders/import/csv - upsert_orders() - 批量导入订单（CSV用）
+  * GET /orders/{order_id}  - get_order_by_id() - 根据订单ID查询
+  * GET /orders/by-number/{order_number} - get_order_by_number() - 根据订单号查询
+  * GET /orders  - list_orders() - 获取订单列表（按时间倒序）
+  * PATCH  /orders/{order_id}  - update_order() - 更新订单信息
+  * DELETE /orders/{order_id} - delete_order() - 删除订单（带警告注释）
