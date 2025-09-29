@@ -1,45 +1,61 @@
 'use client'
 
 import Layout from '@/components/Layout'
-import { Package, ShoppingCart, BarChart3, TrendingUp } from 'lucide-react'
+import { Package, ShoppingCart, BarChart3, CircleDollarSign } from 'lucide-react'
 import Link from 'next/link'
-
-const stats = [
-  {
-    name: '商品总数',
-    value: '0',
-    icon: Package,
-    color: 'text-primary-600',
-    bgColor: 'bg-primary-100',
-    href: '/products',
-  },
-  {
-    name: '订单总数',
-    value: '0',
-    icon: ShoppingCart,
-    color: 'text-success-600',
-    bgColor: 'bg-success-100',
-    href: '/orders',
-  },
-  {
-    name: '总销售额',
-    value: '¥0',
-    icon: TrendingUp,
-    color: 'text-warning-600',
-    bgColor: 'bg-warning-100',
-    href: '/reports',
-  },
-  {
-    name: '报表分析',
-    value: '查看',
-    icon: BarChart3,
-    color: 'text-danger-600',
-    bgColor: 'bg-danger-100',
-    href: '/reports',
-  },
-]
+import { useEffect, useState } from 'react'
+import { reportApi } from '@/lib/api'
 
 export default function HomePage() {
+  // 定义 summary 状态
+  const [summary, setSummary] = useState<{
+    total_sales: number
+    total_orders: number
+    total_quantity: number
+  } | null>(null)
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        // 调用报表接口，不传过滤条件，获取整体汇总
+        const response = await reportApi.getComprehensiveReport({})
+        setSummary(response.data.summary)
+      } catch (error) {
+        console.error('获取首页汇总失败:', error)
+      }
+    }
+    fetchSummary()
+  }, [])
+
+  // 动态统计卡片数据
+  const stats = [
+    {
+      name: '商品总数',
+      // 注意：summary.total_quantity 是卖出的数量，
+      // 如果你要显示商品种类数，可以改用 productApi.getProducts().length
+      value: summary ? summary.total_quantity : 0,
+      icon: Package,
+      color: 'bg-blue-100 text-blue-600',
+    },
+    {
+      name: '订单总数',
+      value: summary ? summary.total_orders : 0,
+      icon: ShoppingCart,
+      color: 'bg-green-100 text-green-600',
+    },
+    {
+      name: '总销售额',
+      value: summary ? `¥${summary.total_sales.toFixed(2)}` : '¥0',
+      icon: CircleDollarSign,
+      color: 'bg-yellow-100 text-yellow-600',
+    },
+    {
+      name: '报表分析',
+      value: '查看',
+      icon: BarChart3,
+      color: 'bg-purple-100 text-purple-600',
+    },
+  ]
   return (
     <Layout>
       <div className="p-6">
@@ -51,26 +67,23 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* 功能卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* 统计卡片 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat) => (
-            <Link
+            <div
               key={stat.name}
-              href={stat.href}
-              className="card hover:shadow-md transition-shadow duration-200"
+              className="card p-6 h-22 flex items-center shadow-md hover:shadow-lg transition-shadow"
             >
-              <div className="card-body">
-                <div className="flex items-center">
-                  <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                    <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
-                  </div>
+              <div className="flex items-center">
+                <div className={`p-4 rounded-full ${stat.color} mr-4`}>
+                  <stat.icon className="h-8 w-8" />
+                </div>
+                <div>
+                  <p className="text-base font-medium text-gray-500">{stat.name}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
 

@@ -220,18 +220,21 @@ export default function ProductsPage() {
                           >
                             <Edit className="h-4 w-4" />
                           </button>
-                          <button
-                            onClick={() => handleCreateOrder(product)}
-                            className="text-success-600 hover:text-success-800"
-                            title="为该商品创建订单"
-                          >
-                            <ShoppingCart className="h-4 w-4" />
-                          </button>
+                          <b></b>
                           <button
                             onClick={() => handleDelete(product.sku)}
                             className="text-danger-600 hover:text-danger-800"
                           >
                             <Trash2 className="h-4 w-4" />
+                          </button>
+                            <b></b>
+                          
+                          <button 
+                            onClick={() => handleCreateOrder(product)}
+                            className="text-success-600 hover:text-success-800"
+                            title="为该商品创建订单"
+                          >
+                            <ShoppingCart className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
