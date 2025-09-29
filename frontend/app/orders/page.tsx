@@ -126,9 +126,8 @@ export default function OrdersPage() {
   // 筛选订单
   const filteredOrders = orders.filter(order =>
     order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (order.buyer_name && order.buyer_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    (products.find(p => p.id === order.product_id)?.name && products.find(p => p.id === order.product_id)?.name.toLowerCase().includes(searchTerm.toLowerCase()))
   )
-
   // 获取渠道徽章样式
   const getChannelBadge = (channel: string) => {
     switch (channel) {
@@ -162,7 +161,7 @@ export default function OrdersPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="搜索订单号或买家姓名..."
+                placeholder="搜索订单号或商品名称..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="form-input pl-10"
