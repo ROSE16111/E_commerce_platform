@@ -340,7 +340,6 @@ function OrderModal({ order, products, onSubmit, onClose }: {
   onClose: () => void
 }) {
   const [formData, setFormData] = useState({
-    order_number: order?.order_number || '',
     product_sku: '',
     actual_price: order ? order.actual_price.toString() : '', // 改为字符串
     quantity: order ? order.quantity.toString() : '',         // 改为字符串
@@ -371,19 +370,6 @@ function OrderModal({ order, products, onSubmit, onClose }: {
           {order ? '编辑订单' : '新增订单'}
         </h3>
         <form onSubmit={handleSubmit} className="space-y-4">
-          
-          {/* 订单号 */}
-          <div>
-            <label className="form-label">订单号 *</label>
-            <input
-              type="text"
-              value={formData.order_number}
-              onChange={(e) => setFormData({ ...formData, order_number: e.target.value })}
-              className="form-input"
-              required
-              disabled={!!order}  // 编辑时锁死
-            />
-          </div>
 
           {/* 商品 */}
           <div>

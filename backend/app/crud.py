@@ -11,8 +11,17 @@ from sqlalchemy import Column,Text
 
 def create_product(db: Session, data: schemas.ProductCreate) -> models.Product:
     """创建商品"""
+    # 用户输入的是前缀，例如 "XXX"
+    prefix = data.sku.strip()  
+     # 找出数据库里已有的同前缀 SKU
+    existing = db.query(models.Product).filter(models.Product.sku.like(f"{prefix}_%")).all()
+
+    # 自动生成下一个序号
+    next_num = len(existing) + 1
+    new_sku = f"{prefix}_{next_num:03d}"
+
     product = models.Product(
-        sku=data.sku,
+        sku=new_sku,
         name=data.name,
         cost_price=Decimal(str(data.cost_price)),
         quantity=data.quantity,
@@ -89,9 +98,28 @@ def create_order(db: Session, data: schemas.OrderCreate) -> models.Order:
     total_sales = Decimal(str(data.actual_price)) * Decimal(str(data.quantity))
     total_cost = product.cost_price * Decimal(str(data.quantity))
     profit = total_sales - total_cost
+    
+    # 查询该商品已有多少订单
+    existing_orders = (
+        db.query(models.Order)
+        .filter(models.Order.product_id == product.id)
+        .with_entities(models.Order.order_number)
+        .all()
+    )
+
+    # 找最大编号
+    max_suffix = 0
+    for o in existing_orders:
+        if o.order_number and "_" in o.order_number:
+            try:
+                suffix = int(o.order_number.split("_")[-1])
+                max_suffix = max(max_suffix, suffix)
+            except:
+                pass
+    new_order_number = f"{product.sku}_{max_suffix + 1:03d}"
 
     order = models.Order(
-        order_number=data.order_number,
+        order_number=new_order_number,
         created_at=datetime.utcnow(),
         transaction_date=data.transaction_date,
         buyer_name=data.buyer_name,

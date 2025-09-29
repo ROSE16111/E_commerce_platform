@@ -38,7 +38,6 @@ class ProductOut(ProductBase):
 # ==================== Order Schemas ====================
 
 class OrderBase(BaseModel):
-    order_number: str
     transaction_date: Optional[datetime] = None
     buyer_name: Optional[str] = None
     actual_price: float = Field(ge=0)
