@@ -79,7 +79,7 @@ class OrderOut(BaseModel):
     channel: Channel
     status: OrderStatus
     product_id: int
-    remark: Optional[str]  # 可为空的备注字段
+    remark: str  # 可为空的备注字段
     class Config:
         from_attributes = True
 

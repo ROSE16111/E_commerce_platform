@@ -56,7 +56,15 @@ export default function OrdersPage() {
         orderApi.getOrders(),
         productApi.getProducts()
       ])
-      setOrders(ordersResponse.data)
+      
+      // ordersResponse.data 才是真正的订单数组
+      const sortedOrders = [...ordersResponse.data].sort((a, b) => {
+        if (!a.transaction_date) return 1   // 没日期的排后
+        if (!b.transaction_date) return -1
+        return new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
+      })
+      
+      setOrders(sortedOrders)
       setProducts(productsResponse.data)
     } catch (error) {
       console.error('获取数据失败:', error)
@@ -352,9 +360,7 @@ function OrderModal({ order, products, onSubmit, onClose }: {
       ...formData,
       actual_price: formData.actual_price ? parseFloat(formData.actual_price) : 0,
       quantity: formData.quantity ? parseInt(formData.quantity) : 0,
-      transaction_date: formData.transaction_date 
-        ? new Date(formData.transaction_date).toISOString() 
-        : null,
+      transaction_date: new Date(formData.transaction_date).toISOString(),
     }
     onSubmit(submitData)
   }
@@ -492,12 +498,13 @@ function OrderModal({ order, products, onSubmit, onClose }: {
           
           {/* 交易日期 */}
           <div>
-            <label className="form-label">交易日期</label>
+            <label className="form-label">交易日期 *</label>
             <input
               type="date"
               value={formData.transaction_date}
               onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
               className="form-input"
+              required
             />
           </div>
 

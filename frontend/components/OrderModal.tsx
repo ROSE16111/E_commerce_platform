@@ -177,12 +177,13 @@ export default function OrderModal({ order, products, onSubmit, onClose }: {
           
           {/* 交易日期 */}
           <div>
-            <label className="form-label">交易日期</label>
+            <label className="form-label">交易日期 * </label>
             <input
               type="date"
               value={formData.transaction_date}
               onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
               className="form-input"
+              required
             />
           </div>
 
