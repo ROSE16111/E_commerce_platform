@@ -131,9 +131,9 @@ export default function OrdersPage() {
   // 获取渠道徽章样式
   const getChannelBadge = (channel: string) => {
     switch (channel) {
-      case 'eBay': return 'badge-primary'
-      case "saltFish": return 'badge-info'
-      case 'Facebook': return 'badge-success'
+      case 'Facebook': return 'badge-primary'
+      case "saltFish": return 'badge-warning'
+      case 'eBay': return 'badge-success'
       default: return 'badge-secondary'
     }
   }
