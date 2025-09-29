@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import Optional, List
 from pydantic import BaseModel, Field
-
+from sqlalchemy import Column,Text
 from .models import PaymentMethod, Channel, OrderStatus
 
 
@@ -48,7 +48,7 @@ class OrderBase(BaseModel):
     channel: Channel
     status: OrderStatus
     product_sku: str
-
+    remark: Optional[str]
 
 class OrderCreate(OrderBase):
     pass
@@ -64,7 +64,7 @@ class OrderUpdate(BaseModel):
     payment_method: Optional[PaymentMethod] = None
     channel: Optional[Channel] = None
     status: Optional[OrderStatus] = None
-
+    remark: Optional[str] = None
 
 class OrderOut(BaseModel):
     id: int
@@ -79,7 +79,7 @@ class OrderOut(BaseModel):
     channel: Channel
     status: OrderStatus
     product_id: int
-
+    remark: Optional[str]  # 可为空的备注字段
     class Config:
         from_attributes = True
 

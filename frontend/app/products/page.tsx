@@ -1,8 +1,11 @@
 'use client'
 
+import OrderModal from '@/components/OrderModal'
+import { productApi, orderApi } from '@/lib/api'
+
 import { useState, useEffect } from 'react'
+import { ShoppingCart } from 'lucide-react'
 import Layout from '@/components/Layout'
-import { productApi } from '@/lib/api'
 import toast from 'react-hot-toast'
 import { 
   Plus, 
@@ -92,6 +95,14 @@ export default function ProductsPage() {
     }
   }
 
+  const [showOrderModal, setShowOrderModal] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  
+  const handleCreateOrder = (product: Product) => {
+    setSelectedProduct(product)
+    setShowOrderModal(true)
+  }
+  
   // 筛选商品
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -210,6 +221,13 @@ export default function ProductsPage() {
                             <Edit className="h-4 w-4" />
                           </button>
                           <button
+                            onClick={() => handleCreateOrder(product)}
+                            className="text-success-600 hover:text-success-800"
+                            title="为该商品创建订单"
+                          >
+                            <ShoppingCart className="h-4 w-4" />
+                          </button>
+                          <button
                             onClick={() => handleDelete(product.sku)}
                             className="text-danger-600 hover:text-danger-800"
                           >
@@ -248,6 +266,24 @@ export default function ProductsPage() {
             optionalFields={['preset_price', 'actual_price']}
           />
         )}
+
+        {/* 商品表格后面，加上创建订单的模态框 */}
+        {showOrderModal && selectedProduct && (
+          <OrderModal
+            order={null}
+            products={[selectedProduct]}  // 锁定当前商品
+            onSubmit={async (formData: any) => {
+              await orderApi.createOrder({
+                ...formData,
+                product_sku: selectedProduct.sku,
+              })
+              toast.success('订单创建成功')
+              setShowOrderModal(false)
+            }}
+            onClose={() => setShowOrderModal(false)}
+          />
+        )}
+
       </div>
     </Layout>
   )
@@ -280,7 +316,7 @@ function ProductModal({ product, onSubmit, onClose }: {
     }
     onSubmit(submitData)
   }
-
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">

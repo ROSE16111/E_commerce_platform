@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Iterable, List
 from decimal import Decimal
 from fastapi import HTTPException
-
+from sqlalchemy import Column,Text
 
 # ==================== Product CRUD ====================
 
@@ -102,6 +102,7 @@ def create_order(db: Session, data: schemas.OrderCreate) -> models.Order:
         channel=data.channel,
         status=data.status,
         product_id=product.id,
+        remark = data.remark,
     )
 
     product.quantity -= data.quantity
@@ -228,7 +229,7 @@ def generate_comprehensive_report(db, filters: schemas.ReportFilters):
     print("Filters Debug:", filters.start_date, filters.end_date)
     compiled = query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
     print("Generated SQL:", compiled)
-    
+
     orders = query.all()
 
     # ===== 汇总统计 =====

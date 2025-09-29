@@ -27,6 +27,7 @@ interface Order {
   channel: 'eBay' | 'Facebook' | 'other'
   status: 'pending' | 'done'
   product_id: number
+  remark?:string | null
 }
 
 interface Product {
@@ -195,13 +196,15 @@ export default function OrdersPage() {
                   <th className="table-header-cell">订单号</th>
                   <th className="table-header-cell">交易日期</th>
                   <th className="table-header-cell">买家</th>
-                  <th className="table-header-cell">商品SKU</th>
+                  <th className="table-header-cell">商品名称</th>
                   <th className="table-header-cell">数量</th>
                   <th className="table-header-cell">售价</th>
                   <th className="table-header-cell">利润</th>
                   <th className="table-header-cell">渠道</th>
                   <th className="table-header-cell">状态</th>
+                  <th className="table-header-cell">备注</th>
                   <th className="table-header-cell">操作</th>
+
                 </tr>
               </thead>
               <tbody className="table-body">
@@ -232,7 +235,7 @@ export default function OrdersPage() {
                       </td>
                       <td className="table-cell">{order.buyer_name || '-'}</td>
                       <td className="table-cell font-mono text-sm">
-                        {products.find(p => p.id === order.product_id)?.sku || 'N/A'}
+                        {products.find(p => p.id === order.product_id)?.name || 'N/A'}
                       </td>
                       <td className="table-cell">{order.quantity}</td>
                       <td className="table-cell font-medium">¥{order.actual_price.toFixed(2)}</td>
@@ -247,6 +250,7 @@ export default function OrdersPage() {
                           {order.status === 'done' ? '已完成' : 'pending'}
                         </span>
                       </td>
+                      <td className="text-sm text-gray-700">{order.remark || "-"}</td>  {/* 显示备注，如果没写就显示 “-” */}
                       <td className="table-cell">
                         <div className="flex gap-2">
                           <button
@@ -338,6 +342,7 @@ function OrderModal({ order, products, onSubmit, onClose }: {
     status: order?.status || 'pending',
     buyer_name: order?.buyer_name || '',
     transaction_date: order?.transaction_date ? order.transaction_date.split('T')[0] : '',
+    remark: order?.remark || '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -484,7 +489,7 @@ function OrderModal({ order, products, onSubmit, onClose }: {
               className="form-input"
             />
           </div>
-
+          
           {/* 交易日期 */}
           <div>
             <label className="form-label">交易日期</label>
@@ -492,6 +497,17 @@ function OrderModal({ order, products, onSubmit, onClose }: {
               type="date"
               value={formData.transaction_date}
               onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
+              className="form-input"
+            />
+          </div>
+
+          {/* 备注 */}
+          <div>
+            <label className="form-label">备注</label>
+            <input
+              type="text"
+              value={formData.remark}
+              onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
               className="form-input"
             />
           </div>
@@ -568,6 +584,10 @@ function OrderDetailModal({ order, products, onClose }: {
           <div>
             <label className="text-sm font-medium text-gray-500">买家</label>
             <p>{order.buyer_name || '-'}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-500">备注</label>
+            <p>{order.remark || '-'}</p>
           </div>
           <div>
             <label className="text-sm font-medium text-gray-500">交易日期</label>
