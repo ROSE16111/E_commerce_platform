@@ -85,6 +85,15 @@ export default function ReportsPage() {
 
   // 获取报表数据
   const fetchReportData = async () => {
+        // 校验开始日期和结束日期
+    if (filters.start_date && filters.end_date) {
+      const start = new Date(filters.start_date);
+      const end = new Date(filters.end_date);
+      if (start > end) {
+        alert("开始日期不能大于结束日期！");
+        return; // ❌ 直接中止，不发请求
+      }
+    }
     try {
       setLoading(true)
   
@@ -101,6 +110,7 @@ export default function ReportsPage() {
     } finally {
       setLoading(false)
     }
+  
   }
   
 
@@ -143,7 +153,22 @@ export default function ReportsPage() {
 
         {/* 操作栏 */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4">
-          <div className="flex-1"></div>
+          
+        <div className="flex-1 flex items-center text-gray-600 text-sm">
+          {reportData?.filters_applied?.start_date && reportData?.filters_applied?.end_date ? (
+            <span>时间范围：{reportData.filters_applied.start_date} ~ {reportData.filters_applied.end_date}</span>
+          ) : reportData?.filters_applied?.start_date ? (
+            <span>时间范围：{reportData.filters_applied.start_date} ~ 至今</span>
+          ) : reportData?.filters_applied?.end_date ? (
+            <span>时间范围：所有至 ~ {reportData.filters_applied.end_date}</span>
+          ) : (
+            <span>时间范围：所有至今</span>
+          )}
+        </div>
+
+
+
+          {/* 右侧按钮 */}
           <div className="flex gap-2">
             <button
               onClick={() => setShowFilters(true)}

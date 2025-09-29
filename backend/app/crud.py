@@ -196,7 +196,7 @@ def upsert_orders(db: Session, orders: Iterable[schemas.OrderCreate]) -> dict:
 from datetime import datetime
 from collections import defaultdict
 from . import models, schemas
-
+from datetime import datetime, timedelta
 def generate_comprehensive_report(db, filters: schemas.ReportFilters):
     """
     生成综合报表
@@ -210,9 +210,11 @@ def generate_comprehensive_report(db, filters: schemas.ReportFilters):
 
     # ===== 应用筛选条件 =====
     if filters.start_date:
-        query = query.filter(models.Order.transaction_date >= filters.start_date)
+        start_datetime = datetime.combine(filters.start_date, datetime.min.time())
+        query = query.filter(models.Order.transaction_date >= start_datetime)
     if filters.end_date:
-        query = query.filter(models.Order.transaction_date <= filters.end_date)
+        end_datetime = datetime.combine(filters.end_date, datetime.max.time())
+        query = query.filter(models.Order.transaction_date <= end_datetime)
     if filters.channels and len(filters.channels) > 0:
         query = query.filter(models.Order.channel.in_(filters.channels))
     if filters.payment_methods and len(filters.payment_methods) > 0:
@@ -221,7 +223,12 @@ def generate_comprehensive_report(db, filters: schemas.ReportFilters):
         query = query.filter(models.Order.status.in_(filters.statuses))
     if filters.product_skus and len(filters.product_skus) > 0:
         query = query.filter(models.Product.sku.in_(filters.product_skus))   # ✅ 改成从 Product 表里筛 SKU
-
+    # ✅ 调试输出
+    from sqlalchemy.dialects import postgresql
+    print("Filters Debug:", filters.start_date, filters.end_date)
+    compiled = query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True})
+    print("Generated SQL:", compiled)
+    
     orders = query.all()
 
     # ===== 汇总统计 =====

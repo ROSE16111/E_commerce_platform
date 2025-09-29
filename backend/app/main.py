@@ -255,6 +255,8 @@ def generate_comprehensive_report(
 	- 订单状态：statuses (pending/done)
 	- 商品SKU：product_skus
 	"""
+	print("Filters:", filters.start_date, filters.end_date)
+
 	return crud.generate_comprehensive_report(db, filters)
 
 
