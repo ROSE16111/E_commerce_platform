@@ -30,7 +30,7 @@ export default function HomePage() {
   // 动态统计卡片数据
   const stats = [
     {
-      name: '商品总数',
+      name: '售出商品总数',
       // 注意：summary.total_quantity 是卖出的数量，
       // 如果你要显示商品种类数，可以改用 productApi.getProducts().length
       value: summary ? summary.total_quantity : 0,

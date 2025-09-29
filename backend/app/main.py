@@ -250,7 +250,7 @@ def generate_comprehensive_report(
 	
 	支持的筛选条件：
 	- 日期范围：start_date, end_date
-	- 渠道：channels (eBay/Facebook/other)
+	- 渠道：channels (eBay/Facebook/咸鱼/other)
 	- 支付方式：payment_methods (cash/payid)
 	- 订单状态：statuses (pending/done)
 	- 商品SKU：product_skus

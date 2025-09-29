@@ -497,7 +497,7 @@ function FilterModal({ filters, setFilters, onApply, onReset, onClose }: {
           <div>
             <label className="form-label">销售渠道</label>
             <div className="space-y-2">
-              {['eBay', 'Facebook', 'other'].map(channel => (
+              {['eBay', 'Facebook', 'saltFish','other'].map(channel => (
                 <label key={channel} className="flex items-center">
                   <input
                     type="checkbox"

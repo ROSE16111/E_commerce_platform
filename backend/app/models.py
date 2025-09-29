@@ -14,6 +14,7 @@ class PaymentMethod(str, enum.Enum):
 class Channel(str, enum.Enum):
 	ebay = "eBay"
 	facebook = "Facebook"
+	saltFish = "saltFish"
 	other = "other"
 
 

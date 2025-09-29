@@ -12,7 +12,7 @@ interface Order {
   quantity: number
   profit: number
   payment_method: 'cash' | 'payid'
-  channel: 'eBay' | 'Facebook' | 'other'
+  channel: 'eBay' | 'Facebook' |'saltFish'| 'other'
   status: 'pending' | 'done'
   product_id: number
   remark?: string | null
@@ -132,6 +132,7 @@ export default function OrderModal({ order, products, onSubmit, onClose }: {
             >
               <option value="eBay">eBay</option>
               <option value="Facebook">Facebook</option>
+              <option value="saltFish">咸鱼</option>
               <option value="other">其他</option>
             </select>
           </div>
