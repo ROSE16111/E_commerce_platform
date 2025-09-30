@@ -68,3 +68,6 @@ Worker 根据路径 /api 走后端容器，/ 走前端容器。
 
 * 确保 Docker 在后台运行（wrangler 会用 Docker 构建镜像）
 * 再根目录运行 `npx wrangler deploy`
+
+## 后端部署
+https://dashboard.render.com
