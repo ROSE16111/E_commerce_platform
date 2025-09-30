@@ -50,7 +50,7 @@ npm install
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
-
+部署后：`NEXT_PUBLIC_API_URL=https://e-commerce-backend.onrender.com`
 ### 3. 启动开发服务器
 ```bash
 npm run dev
