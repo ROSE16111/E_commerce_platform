@@ -15,6 +15,10 @@ app = FastAPI(title="E-commerce ERP (Lite)")
 # FastAPI 默认没开跨域，前端直接 fetch 可能被浏览器拦截
 from fastapi.middleware.cors import CORSMiddleware
 
+@app.get("/")
+def root():
+    return {"message": "Backend is running!"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # 或者只允许 ["http://localhost:3000"]
