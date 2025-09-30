@@ -35,3 +35,6 @@ CLOUDFLARE_API_TOKEN = "$CLOUDFLARE_API_TOKEN"
 [[r2_buckets]]
 binding = "NEXT_INC_CACHE_R2_BUCKET"
 bucket_name = "cache"
+
+[vars]
+NEXT_PUBLIC_API_URL = "https://e-commerce-platform-7zg5.onrender.com"
