@@ -16,5 +16,17 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  backend:
+    build: ./backend
+    container_name: ecommerce_backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://ecom_user:ecom_pass@db:5432/ecommerce
+    ports:
+      - "8000:8000"
+
 volumes:
   pgdata:

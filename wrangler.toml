@@ -1,0 +1,37 @@
+name = "ecommerce-platform"
+main = "frontend/.open-next/worker.js"
+compatibility_date = "2025-09-30"
+
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+
+[assets]
+directory = "frontend/.open-next/assets"
+binding = "ASSETS"
+
+# services 要用数组
+[[services]]
+binding = "WORKER_SELF_REFERENCE"
+service = "ecommerce-platform"
+
+# 定义后端容器（必须指向 Dockerfile）
+[[containers]]
+class_name = "BackendContainer"
+image = "./backend/Dockerfile"
+max_instances = 3
+
+[durable_objects]
+bindings = [
+  { name = "BACKEND_CONTAINER", class_name = "BackendContainer" }
+]
+
+# durable object migrations
+[[migrations]]
+tag = "v1"
+new_classes = ["BackendContainer"]
+
+[vars]
+CLOUDFLARE_API_TOKEN = "$CLOUDFLARE_API_TOKEN"
+
+[[r2_buckets]]
+binding = "NEXT_INC_CACHE_R2_BUCKET"
+bucket_name = "cache"
