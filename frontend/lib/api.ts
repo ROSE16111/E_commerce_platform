@@ -4,6 +4,8 @@ import { useState } from 'react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 
+console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
+
 // API 基础配置
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
