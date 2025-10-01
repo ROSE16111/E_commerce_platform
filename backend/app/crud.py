@@ -263,7 +263,8 @@ def generate_comprehensive_report(db, filters: schemas.ReportFilters):
     # ===== 汇总统计 =====
     total_sales = sum(float(o.actual_price) * o.quantity for o in orders)
     total_cost = sum(float(o.product.cost_price) * o.quantity for o in orders if o.product)
-    total_profit = sum(float(o.profit) for o in orders)
+    #报表是实时算出来的，避免了“订单表里存了旧的 profit”的问题
+    total_profit = sum(float(o.actual_price) * o.quantity - float(o.product.cost_price) * o.quantity for o in orders)
     total_orders = len(orders)
     total_quantity = sum(o.quantity for o in orders)
     profit_margin = (total_profit / total_sales * 100) if total_sales > 0 else 0
@@ -290,7 +291,7 @@ def generate_comprehensive_report(db, filters: schemas.ReportFilters):
         cs = channel_stats_dict[o.channel]
         cs["total_sales"] += float(o.actual_price) * o.quantity
         cs["total_cost"] += float(o.product.cost_price) * o.quantity if o.product else 0
-        cs["total_profit"] += float(o.profit)
+        cs["total_profit"] += float(total_profit = sum(float(o.actual_price) * o.quantity - float(o.product.cost_price) * o.quantity for o in orders))
         cs["order_count"] += 1
         cs["quantity"] += o.quantity
 
@@ -322,7 +323,7 @@ def generate_comprehensive_report(db, filters: schemas.ReportFilters):
         ps["product_name"] = o.product.name if o.product else "未知商品"
         ps["total_sales"] += float(o.actual_price) * o.quantity
         ps["total_cost"] += float(o.product.cost_price) * o.quantity if o.product else 0
-        ps["total_profit"] += float(o.profit)
+        ps["total_profit"] += float(total_profit = sum(float(o.actual_price) * o.quantity - float(o.product.cost_price) * o.quantity for o in orders))
         ps["quantity_sold"] += o.quantity
         ps["order_count"] += 1
 
@@ -354,7 +355,7 @@ def generate_comprehensive_report(db, filters: schemas.ReportFilters):
             ts = time_series_dict[day]
             ts["total_sales"] += float(o.actual_price) * o.quantity
             ts["total_cost"] += float(o.product.cost_price) * o.quantity if o.product else 0
-            ts["total_profit"] += float(o.profit)
+            ts["total_profit"] += float(total_profit = sum(float(o.actual_price) * o.quantity - float(o.product.cost_price) * o.quantity for o in orders))
             ts["order_count"] += 1
 
     time_series = [

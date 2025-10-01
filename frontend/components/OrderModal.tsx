@@ -40,7 +40,7 @@ export default function OrderModal({ order, products, onSubmit, onClose }: {
   actual_price: order?.actual_price?.toString() || '',
   quantity: order?.quantity?.toString() || '',
   payment_method: order?.payment_method || 'cash',
-  channel: order?.channel || 'eBay',
+  channel: order?.channel || 'Facebook',
   status: order?.status || 'pending',
   buyer_name: order?.buyer_name || '',
   transaction_date: order?.transaction_date || '',
@@ -90,7 +90,7 @@ export default function OrderModal({ order, products, onSubmit, onClose }: {
               type="number"
               step="0.01"
               min="0"
-              value={formData.actual_price}
+              value={`${products.find(p => p.id)?.preset_price || ''}` }
               onChange={(e) => setFormData({ ...formData, actual_price: e.target.value })}
               className="form-input"
               required

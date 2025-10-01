@@ -6,6 +6,9 @@
   * 简化：减少重复上架、手工统计，让小商户专注于卖货而不是做表格。
   * 可视化：销售额、利润、库存一眼可见
 
+* 网址： https://ecommerce-frontend.qs16111.workers.dev
+### V 0.1.0
+初步可以使用，导入商品CSV还不能自动识别已存在的，导入订单CSV逻辑还有点问题，暂时不建议用
 ## function
 * 商品库（Product Module）
   * 手动或导入 Excel/CSV录入

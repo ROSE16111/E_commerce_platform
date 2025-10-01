@@ -338,7 +338,15 @@ if (sortConfig.key) {
                       </td>
                       <td className="table-cell">{order.quantity}</td>
                       <td className="table-cell font-medium">¥{order.actual_price.toFixed(2)}</td>
-                      <td className="table-cell font-medium text-success-600">¥{order.profit.toFixed(2)}</td>
+                      <td className="table-cell font-medium text-success-600">
+                        {(() => {
+                          const product = products.find(p => p.id === order.product_id)
+                          if (!product) return 'N/A'
+                          const profit = (order.actual_price - product.cost_price) * order.quantity
+                          return `¥${profit.toFixed(2)}`
+                        })()}
+                      </td>
+
                       <td className="table-cell">
                         <span className={`badge ${getChannelBadge(order.channel)}`}>
                           {order.channel}
@@ -439,7 +447,7 @@ function OrderModal({ order, products, onSubmit, onClose }: {
     channel: order?.channel || 'eBay',
     status: order?.status || 'pending',
     buyer_name: order?.buyer_name || '',
-    transaction_date: order?.transaction_date || '',
+    transaction_date: order?.transaction_date? new Date(order.transaction_date).toISOString().split('T')[0] : '',
     remark: order?.remark || '',
   })
 
