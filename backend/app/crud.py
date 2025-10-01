@@ -76,8 +76,34 @@ def update_product(db: Session, product: models.Product, data: schemas.ProductUp
 def delete_product(db: Session, product: models.Product) -> None:
     db.delete(product)
     db.commit()
+def get_product_by_name(db: Session, name: str) -> models.Product | None:
+    return db.query(models.Product).filter(models.Product.name == name).first()
 
+def upsert_products(db: Session, products: Iterable[schemas.ProductCreate]) -> dict:
+    inserted = 0
+    updated = 0
+    for payload in products:
+        existing = get_product_by_name(db, payload.name)
+        if existing is None:
+            create_product(db, payload)  # 依然生成 SKU_xxx
+            inserted += 1
+        else:
+            update_product(
+                db,
+                existing,
+                schemas.ProductUpdate(
+                    name=payload.name,
+                    cost_price=payload.cost_price,
+                    quantity=payload.quantity,
+                    preset_price=payload.preset_price,
+                    actual_price=payload.actual_price,
+                ),
+            )
+            updated += 1
+    return {"inserted": inserted, "updated": updated}
 
+'''
+# 以SKU为唯一识别
 def upsert_products(db: Session, products: Iterable[schemas.ProductCreate]) -> dict:
     inserted = 0
     updated = 0
@@ -100,7 +126,7 @@ def upsert_products(db: Session, products: Iterable[schemas.ProductCreate]) -> d
             )
             updated += 1
     return {"inserted": inserted, "updated": updated}
-
+'''
 
 # ==================== Order CRUD ====================
 

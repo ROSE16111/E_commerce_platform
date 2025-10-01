@@ -28,7 +28,7 @@ class Product(Base):
 
 	id = Column(Integer, primary_key=True, index=True)
 	sku = Column(String(64), unique=True, index=True, nullable=False)
-	name = Column(String(255), nullable=False)
+	name = Column(String(255), nullable=False, unique=True,index=True)
 	cost_price = Column(Numeric(12, 2), nullable=False)
 	quantity = Column(Integer, nullable=False, default=0)
 	preset_price = Column(Numeric(12, 2), nullable=True)
