@@ -7,8 +7,7 @@ from datetime import datetime
 from typing import Optional, List
 from fastapi.responses import StreamingResponse
 from .database import Base, engine, get_db
-from . import schemas, crud
-from . import models
+from . import schemas, crud, models
 
 
 app = FastAPI(title="E-commerce ERP (Lite)")
@@ -402,7 +401,7 @@ def get_time_series_data(
 		filters.product_skus = [s.strip() for s in product_skus.split(",")]
 	
 	return crud.calculate_time_series(db, filters)
-
+from sqlalchemy.orm import joinedload
 @app.get("/products/export/csv")
 def export_products(db: Session = Depends(get_db)):
     products = db.query(models.Product).all()
@@ -418,7 +417,7 @@ def export_products(db: Session = Depends(get_db)):
 
 @app.get("/orders/export/csv")
 def export_orders(db: Session = Depends(get_db)):
-    orders = db.query(models.Order).all()
+    orders = db.query(models.Order).options(joinedload(models.Order.product)).all()
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["id", "product_sku", "quantity", "actual_price", "profit", "buyer_name", "transaction_date"])
