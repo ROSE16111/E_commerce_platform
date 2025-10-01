@@ -3246,13 +3246,13 @@
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/orders/page_client-reference-manifest.js": {
-      "bytes": 6807,
+    ".open-next/server-functions/default/.next/server/app/products/page_client-reference-manifest.js": {
+      "bytes": 6813,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/products/page_client-reference-manifest.js": {
-      "bytes": 6813,
+    ".open-next/server-functions/default/.next/server/app/orders/page_client-reference-manifest.js": {
+      "bytes": 6807,
       "imports": [],
       "format": "cjs"
     },
@@ -3295,14 +3295,14 @@
           "original": "E:\\E_commerce_platform\\frontend\\.open-next\\server-functions\\default\\.next\\server\\app\\reports\\page_client-reference-manifest.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/app/orders/page_client-reference-manifest.js",
-          "kind": "require-call",
-          "original": "E:\\E_commerce_platform\\frontend\\.open-next\\server-functions\\default\\.next\\server\\app\\orders\\page_client-reference-manifest.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/app/products/page_client-reference-manifest.js",
           "kind": "require-call",
           "original": "E:\\E_commerce_platform\\frontend\\.open-next\\server-functions\\default\\.next\\server\\app\\products\\page_client-reference-manifest.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/app/orders/page_client-reference-manifest.js",
+          "kind": "require-call",
+          "original": "E:\\E_commerce_platform\\frontend\\.open-next\\server-functions\\default\\.next\\server\\app\\orders\\page_client-reference-manifest.js"
         }
       ],
       "format": "cjs"
@@ -4087,7 +4087,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/orders/page.js": {
-      "bytes": 39618,
+      "bytes": 39784,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -4329,7 +4329,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/products/page.js": {
-      "bytes": 39010,
+      "bytes": 39038,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -8043,11 +8043,11 @@
         ".open-next/server-functions/default/.next/server/app/reports/page_client-reference-manifest.js": {
           "bytesInOutput": 6332
         },
-        ".open-next/server-functions/default/.next/server/app/orders/page_client-reference-manifest.js": {
-          "bytesInOutput": 6283
-        },
         ".open-next/server-functions/default/.next/server/app/products/page_client-reference-manifest.js": {
           "bytesInOutput": 6291
+        },
+        ".open-next/server-functions/default/.next/server/app/orders/page_client-reference-manifest.js": {
+          "bytesInOutput": 6283
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
           "bytesInOutput": 16113
@@ -8170,13 +8170,13 @@
           "bytesInOutput": 16903
         },
         ".open-next/server-functions/default/.next/server/app/orders/page.js": {
-          "bytesInOutput": 41597
+          "bytesInOutput": 41757
         },
         ".open-next/server-functions/default/.next/server/app/page.js": {
           "bytesInOutput": 28311
         },
         ".open-next/server-functions/default/.next/server/app/products/page.js": {
-          "bytesInOutput": 40861
+          "bytesInOutput": 40891
         },
         ".open-next/server-functions/default/.next/server/app/reports/page.js": {
           "bytesInOutput": 501936
@@ -8452,7 +8452,7 @@
           "bytesInOutput": 51814
         }
       },
-      "bytes": 3476885
+      "bytes": 3477075
     }
   }
 }
