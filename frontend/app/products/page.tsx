@@ -222,6 +222,14 @@ if (sortConfig.key) {
               <Trash2 className="h-4 w-4 mr-2" />
               批量删除
             </button>
+            <a 
+              href="https://e-commerce-platform-7zg5.onrender.com/products/export/csv" 
+              className="btn-secondary"
+              download
+            >
+              导出商品CSV
+            </a>
+
           </div>
         </div>
 

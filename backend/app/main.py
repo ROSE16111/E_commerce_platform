@@ -5,9 +5,11 @@ import csv
 import io
 from datetime import datetime
 from typing import Optional, List
-
+from fastapi.responses import StreamingResponse
 from .database import Base, engine, get_db
 from . import schemas, crud
+from . import models
+
 
 app = FastAPI(title="E-commerce ERP (Lite)")
 
@@ -400,3 +402,29 @@ def get_time_series_data(
 		filters.product_skus = [s.strip() for s in product_skus.split(",")]
 	
 	return crud.calculate_time_series(db, filters)
+
+@app.get("/products/export/csv")
+def export_products(db: Session = Depends(get_db)):
+    products = db.query(models.Product).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["sku", "name", "cost_price", "quantity", "preset_price", "actual_price"])
+    for p in products:
+        writer.writerow([p.sku, p.name, p.cost_price, p.quantity, p.preset_price, p.actual_price])
+    output.seek(0)
+    return StreamingResponse(output, media_type="text/csv", headers={
+        "Content-Disposition": "attachment; filename=products.csv"
+    })
+
+@app.get("/orders/export/csv")
+def export_orders(db: Session = Depends(get_db)):
+    orders = db.query(models.Order).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["id", "product_sku", "quantity", "actual_price", "profit", "buyer_name", "transaction_date"])
+    for o in orders:
+        writer.writerow([o.id, o.product.sku if o.product else "", o.quantity, o.actual_price, o.profit, o.buyer_name, o.transaction_date])
+    output.seek(0)
+    return StreamingResponse(output, media_type="text/csv", headers={
+        "Content-Disposition": "attachment; filename=orders.csv"
+    })
