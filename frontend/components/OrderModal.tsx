@@ -1,23 +1,6 @@
 'use client'
 import { useState } from 'react'
 
-// 定义接口
-interface Order {
-  id: number
-  order_number: string
-  created_at: string
-  transaction_date?: string
-  buyer_name?: string
-  actual_price: number
-  quantity: number
-  profit: number
-  payment_method: 'cash' | 'payid'
-  channel: 'eBay' | 'Facebook' |'saltFish'| 'other'
-  status: 'pending' | 'done'
-  product_id: number
-  remark?: string | null
-}
-
 interface Product {
   id: number
   sku: string
@@ -28,25 +11,27 @@ interface Product {
   actual_price?: number
 }
 
-// 组件
-export default function OrderModal({ order, products, onSubmit, onClose }: {
-  order: Order | null
-  products: Product[]
+export default function OrderModal({
+  product,   // ✅ 直接传入当前商品
+  onSubmit,
+  onClose
+}: {
+  product: Product
   onSubmit: (data: any) => void
   onClose: () => void
 }) {
+  // 初始化表单数据
   const [formData, setFormData] = useState({
-  product_sku: order ? products.find(p => p.id === order.product_id)?.sku || '' : '',
-  actual_price: order?.actual_price?.toString() || '',
-  quantity: order?.quantity?.toString() || '',
-  payment_method: order?.payment_method || 'cash',
-  channel: order?.channel || 'Facebook',
-  status: order?.status || 'pending',
-  buyer_name: order?.buyer_name || '',
-  transaction_date: order?.transaction_date || '',
-  remark: order?.remark || '',
-})
-
+    product_sku: product.sku, // 锁死商品
+    actual_price: product.preset_price?.toString() || '', // 默认用预售价
+    quantity: '1',
+    payment_method: 'cash',
+    channel: 'Facebook',
+    status: 'pending',
+    buyer_name: '',
+    transaction_date: '',
+    remark: ''
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,33 +49,28 @@ export default function OrderModal({ order, products, onSubmit, onClose }: {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold mb-4">
-          {order ? '编辑订单' : '新增订单'}
-        </h3>
+        <h3 className="text-lg font-semibold mb-4">新增订单</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* 商品 */}
+          {/* 商品（锁死显示） */}
           <div>
             <label className="form-label">商品 *</label>
-            {
-              // 编辑时：显示锁死的商品名称和 SKU
-              <input
-                type="text"
-                value={`${products.find(p => p.id)?.name || ''} - ${products.find(p => p.id)?.sku || ''} (库存: ${products.find(p => p.id)?.quantity})`}
-                className="form-input"
-                disabled
-              />
-            }
+            <input
+              type="text"
+              value={`${product.name} - ${product.sku} (库存: ${product.quantity})`}
+              className="form-input"
+              disabled
+            />
           </div>
 
-          {/* 实际售价 */}
+          {/* 实际售价（默认预售价，可编辑） */}
           <div>
             <label className="form-label">实际售价 *</label>
             <input
               type="number"
               step="0.01"
               min="0"
-              value={`${products.find(p => p.id)?.preset_price || ''}` }
+              value={formData.actual_price}
               onChange={(e) => setFormData({ ...formData, actual_price: e.target.value })}
               className="form-input"
               required
@@ -129,7 +109,7 @@ export default function OrderModal({ order, products, onSubmit, onClose }: {
             <label className="form-label">销售渠道 *</label>
             <select
               value={formData.channel}
-              onChange={(e) => setFormData({ ...formData, channel: e.target.value as 'eBay' | 'Facebook' | 'other' })}
+              onChange={(e) => setFormData({ ...formData, channel: e.target.value as 'eBay' | 'Facebook' | 'saltFish' | 'other' })}
               className="form-input"
               required
             >
@@ -140,7 +120,7 @@ export default function OrderModal({ order, products, onSubmit, onClose }: {
             </select>
           </div>
 
-          {/* 订单状态 */}
+          {/* 状态 */}
           <div>
             <label className="form-label">订单状态 *</label>
             <select
@@ -164,10 +144,10 @@ export default function OrderModal({ order, products, onSubmit, onClose }: {
               className="form-input"
             />
           </div>
-          
+
           {/* 交易日期 */}
           <div>
-            <label className="form-label">交易日期 * </label>
+            <label className="form-label">交易日期 *</label>
             <input
               type="date"
               value={formData.transaction_date}
@@ -188,16 +168,11 @@ export default function OrderModal({ order, products, onSubmit, onClose }: {
             />
           </div>
 
-          {/* 按钮 */}
           <div className="flex gap-2 pt-4">
-            <button type="submit" className="btn-success flex-1">
-              {order ? '更新' : '创建'}
-            </button>
-            <button type="button" onClick={onClose} className="btn-secondary flex-1">
-              取消
-            </button>
+            <button type="submit" className="btn-success flex-1">创建</button>
+            <button type="button" onClick={onClose} className="btn-secondary flex-1">取消</button>
           </div>
-          </form>
+        </form>
       </div>
     </div>
   )

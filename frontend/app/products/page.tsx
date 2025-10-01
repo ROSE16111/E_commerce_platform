@@ -384,19 +384,18 @@ if (sortConfig.key) {
         {/* 商品表格后面，加上创建订单的模态框 */}
         {showOrderModal && selectedProduct && (
           <OrderModal
-            order={null}
-            products={[selectedProduct]}  // 锁定当前商品
-            onSubmit={async (formData: any) => {
-              await orderApi.createOrder({
-                ...formData,
-                product_sku: selectedProduct.sku,
-              })
-              toast.success('订单创建成功')
-              setShowOrderModal(false)
-            }}
-            onClose={() => setShowOrderModal(false)}
-          />
-        )}
+            product={selectedProduct}
+           onSubmit={async (formData: any) => {
+                await orderApi.createOrder({
+                  ...formData,
+                  product_sku: selectedProduct.sku, // 再确认一遍锁死
+                })
+                toast.success('订单创建成功')
+                setShowOrderModal(false)
+              }}
+              onClose={() => setShowOrderModal(false)}
+            />
+          )}
 
       </div>
     </Layout>
