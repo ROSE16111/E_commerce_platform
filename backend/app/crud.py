@@ -56,10 +56,19 @@ def update_product(db: Session, product: models.Product, data: schemas.ProductUp
     if data.cost_price is not None:
         orders = db.query(models.Order).filter(models.Order.product_id == product.id).all()
         for order in orders:
-            total_sales = order.actual_price * order.quantity
-            total_cost = product.cost_price * order.quantity
-            order.profit = total_sales - total_cost
-            db.add(order)
+            # 这里用 order 本身的数据，调用 update_order 来重算利润
+            update_data = schemas.OrderUpdate(
+                actual_price=order.actual_price,
+                quantity=order.quantity,
+                payment_method=order.payment_method,
+                channel=order.channel,
+                status=order.status,
+                buyer_name=order.buyer_name,
+                transaction_date=order.transaction_date,
+                remark=order.remark,
+            )
+            update_order(db, order, update_data)
+
         db.commit()
     return product
 
