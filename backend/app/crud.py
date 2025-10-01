@@ -203,6 +203,9 @@ def update_order(db: Session, order: models.Order, data: schemas.OrderUpdate) ->
     total_cost = product.cost_price * Decimal(str(final_quantity))
     order.profit = total_sales - total_cost
 
+     # ✅ 更新 product 的实际售价为这次订单的售价
+    product.actual_price = final_price
+    
     db.add(order)
     db.add(product)
     db.commit()

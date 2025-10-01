@@ -447,7 +447,7 @@ function OrderModal({ order, products, onSubmit, onClose }: {
     channel: order?.channel || 'eBay',
     status: order?.status || 'pending',
     buyer_name: order?.buyer_name || '',
-    transaction_date: order?.transaction_date? new Date(order.transaction_date).toISOString().split('T')[0] : '',
+    transaction_date: order?.transaction_date? new Date(order.transaction_date).toLocaleDateString('en-CA')  : '',
     remark: order?.remark || '',
   })
 
