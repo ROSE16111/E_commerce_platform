@@ -33,6 +33,11 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [showImportModal, setShowImportModal] = useState(false)
+// 排序状态
+const [sortConfig, setSortConfig] = useState<{ key: keyof Product | null; direction: 'asc' | 'desc' }>({
+  key: null,
+  direction: 'asc',
+})
 
   // 获取商品列表
   const fetchProducts = async () => {
@@ -50,12 +55,40 @@ export default function ProductsPage() {
   useEffect(() => {
     fetchProducts()
   }, [])
+const handleSort = (key: keyof Product) => {
+  let direction: 'asc' | 'desc' = 'asc'
+  if (sortConfig.key === key && sortConfig.direction === 'asc') {
+    direction = 'desc'
+  }
+  setSortConfig({ key, direction })
+}
 
   // 筛选商品
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+let filteredProducts = products.filter(product =>
+  product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  product.sku.toLowerCase().includes(searchTerm.toLowerCase())
+)
+
+// 排序逻辑
+// 排序逻辑
+if (sortConfig.key) {
+  const key = sortConfig.key as keyof Product
+  filteredProducts = [...filteredProducts].sort((a, b) => {
+    const aValue = a[key] ?? ''
+    const bValue = b[key] ?? ''
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue
+    }
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortConfig.direction === 'asc'
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue)
+    }
+    return 0
+  })
+}
+
 
   // 创建/更新商品
   const handleSubmit = async (formData: any) => {
@@ -218,11 +251,31 @@ export default function ProductsPage() {
             <table className="table">
               <thead className="table-header">
                 <tr>
-                  <th className="table-header-cell">SKU</th>
+                  <th className="table-header-cell">
+                    SKU
+                    <button onClick={() => handleSort('sku')} className="ml-1 text-xs text-gray-500">
+                      ⇅
+                    </button>
+                  </th>
                   <th className="table-header-cell">商品名称</th>
-                  <th className="table-header-cell">成本价</th>
-                  <th className="table-header-cell">库存数量</th>
-                  <th className="table-header-cell">预设售价</th>
+                  <th className="table-header-cell">
+                    成本价
+                    <button onClick={() => handleSort('cost_price')} className="ml-1 text-xs text-gray-500">
+                      ⇅
+                    </button>
+                  </th>
+                  <th className="table-header-cell">
+                    库存数量
+                    <button onClick={() => handleSort('quantity')} className="ml-1 text-xs text-gray-500">
+                      ⇅
+                    </button>
+                  </th>
+                  <th className="table-header-cell">
+                    预设售价
+                    <button onClick={() => handleSort('preset_price')} className="ml-1 text-xs text-gray-500">
+                      ⇅
+                    </button>
+                  </th>
                   <th className="table-header-cell">实际售价</th>
                   <th className="table-header-cell">操作</th>
                 </tr>
@@ -314,7 +367,7 @@ export default function ProductsPage() {
             onImport={handleImport}
             onClose={() => setShowImportModal(false)}
             title="导入商品CSV"
-            description="请选择包含商品信息的CSV文件"
+            description="请选择包含商品信息的CSV文件（sku为商品类型/前缀）"
             requiredFields={['sku', 'name', 'cost_price', 'quantity']}
             optionalFields={['preset_price', 'actual_price']}
           />
@@ -378,7 +431,7 @@ function ProductModal({ product, onSubmit, onClose }: {
         </h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="form-label">SKU *</label>
+            <label className="form-label">SKU前缀 *</label>
             <input
               type="text"
               value={formData.sku}

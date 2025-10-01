@@ -49,7 +49,11 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showImportModal, setShowImportModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState<Order | null>(null)
-
+//加排序状态
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Order | null; direction: 'asc' | 'desc' }>({
+    key: null,
+    direction: 'asc',
+  })
   // 获取订单和商品列表
   const fetchData = async () => {
     try {
@@ -78,6 +82,15 @@ export default function OrdersPage() {
   useEffect(() => {
     fetchData()
   }, [])
+
+  // 点击排序按钮时切换排序字段
+  const handleSort = (key: keyof Order) => {
+    let direction: 'asc' | 'desc' = 'asc'
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig({ key, direction })
+  }
 
   // 创建/更新订单
   const handleSubmit = async (formData: any) => {
@@ -160,6 +173,18 @@ export default function OrdersPage() {
     order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (products.find(p => p.id === order.product_id)?.name && products.find(p => p.id === order.product_id)?.name.toLowerCase().includes(searchTerm.toLowerCase()))
   )
+// 排序逻辑
+if (sortConfig.key) {
+  const key = sortConfig.key as keyof Order
+  filteredOrders.sort((a, b) => {
+    const aValue = a[key] ?? 0
+    const bValue = b[key] ?? 0
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue
+    }
+    return 0
+  })
+}
 
   const getChannelBadge = (channel: string) => {
     switch (channel) {
@@ -249,12 +274,32 @@ export default function OrdersPage() {
               <thead className="table-header">
                 <tr>
                   <th className="table-header-cell">订单号</th>
-                  <th className="table-header-cell">交易日期</th>
+                  <th className="table-header-cell">
+                    交易日期
+                    <button onClick={() => handleSort('quantity')} className="ml-1 text-xs text-gray-500">
+                      ⇅
+                    </button>
+                  </th>
                   <th className="table-header-cell">买家</th>
                   <th className="table-header-cell">商品名称</th>
-                  <th className="table-header-cell">数量</th>
-                  <th className="table-header-cell">售价</th>
-                  <th className="table-header-cell">利润</th>
+                  <th className="table-header-cell">
+                    数量
+                    <button onClick={() => handleSort('quantity')} className="ml-1 text-xs text-gray-500">
+                      ⇅
+                    </button>
+                  </th>
+                  <th className="table-header-cell">
+                    售价
+                    <button onClick={() => handleSort('actual_price')} className="ml-1 text-xs text-gray-500">
+                      ⇅
+                    </button>
+                  </th>
+                  <th className="table-header-cell">
+                    利润
+                    <button onClick={() => handleSort('profit')} className="ml-1 text-xs text-gray-500">
+                      ⇅
+                    </button>
+                  </th>
                   <th className="table-header-cell">渠道</th>
                   <th className="table-header-cell">状态</th>
                   <th className="table-header-cell">备注</th>
