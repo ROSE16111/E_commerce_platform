@@ -24,6 +24,8 @@ interface Product {
   name: string
   cost_price: number
   quantity: number
+  preset_price?: number
+  actual_price?: number
 }
 
 // 组件
@@ -34,16 +36,17 @@ export default function OrderModal({ order, products, onSubmit, onClose }: {
   onClose: () => void
 }) {
   const [formData, setFormData] = useState({
-    product_sku: '',
-    actual_price: order ? order.actual_price.toString() : '',
-    quantity: order ? order.quantity.toString() : '',
-    payment_method: order?.payment_method || 'cash',
-    channel: order?.channel || 'eBay',
-    status: order?.status || 'pending',
-    buyer_name: order?.buyer_name || '',
-    transaction_date: order?.transaction_date ? order.transaction_date.split('T')[0] : '',
-    remark: order?.remark || '',
-  })
+  product_sku: order ? products.find(p => p.id === order.product_id)?.sku || '' : '',
+  actual_price: order?.actual_price?.toString() || '',
+  quantity: order?.quantity?.toString() || '',
+  payment_method: order?.payment_method || 'cash',
+  channel: order?.channel || 'eBay',
+  status: order?.status || 'pending',
+  buyer_name: order?.buyer_name || '',
+  transaction_date: order?.transaction_date || '',
+  remark: order?.remark || '',
+})
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
