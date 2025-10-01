@@ -14,7 +14,6 @@ import {
   Trash2, 
   Package,
   Search,
-  Filter
 } from 'lucide-react'
 
 interface Product {
@@ -52,6 +51,12 @@ export default function ProductsPage() {
     fetchProducts()
   }, [])
 
+  // 筛选商品
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
   // 创建/更新商品
   const handleSubmit = async (formData: any) => {
     try {
@@ -83,6 +88,41 @@ export default function ProductsPage() {
     }
   }
 
+  // 🚀 批量删除进度状态
+  const [deleting, setDeleting] = useState(false)
+  const [deleteProgress, setDeleteProgress] = useState(0)
+
+  // 🚀 带进度条的批量删除
+  const handleBulkDelete = async () => {
+    const itemsToDelete = [...filteredProducts]
+
+    if (!confirm(`确定要删除当前显示的 ${itemsToDelete.length} 个商品吗？`)) return
+
+    setDeleting(true)
+    setDeleteProgress(0)
+
+    try {
+      const total = itemsToDelete.length
+
+      for (let i = 0; i < total; i++) {
+        await productApi.deleteProduct(itemsToDelete[i].sku)
+
+        setDeleteProgress(Math.round(((i + 1) / total) * 100))
+
+        // 给 UI 时间刷新
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+
+      toast.success(`成功删除 ${total} 个商品`)
+      fetchProducts()
+    } catch (error) {
+      console.error('批量删除失败:', error)
+      toast.error('批量删除失败')
+    } finally {
+      setTimeout(() => setDeleting(false), 800)
+    }
+  }
+
   // CSV导入
   const handleImport = async (file: File) => {
     try {
@@ -102,12 +142,6 @@ export default function ProductsPage() {
     setSelectedProduct(product)
     setShowOrderModal(true)
   }
-  
-  // 筛选商品
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   return (
     <Layout>
@@ -135,11 +169,9 @@ export default function ProductsPage() {
               />
             </div>
           </div>
+
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowImportModal(true)}
-              className="btn-secondary"
-            >
+            <button onClick={() => setShowImportModal(true)} className="btn-secondary">
               <Upload className="h-4 w-4 mr-2" />
               导入CSV
             </button>
@@ -153,8 +185,27 @@ export default function ProductsPage() {
               <Plus className="h-4 w-4 mr-2" />
               新增商品
             </button>
+            <button onClick={handleBulkDelete} className="btn-danger">
+              <Trash2 className="h-4 w-4 mr-2" />
+              批量删除
+            </button>
           </div>
         </div>
+
+        {/* 🚀 批量删除进度条 */}
+        {deleting && (
+          <div className="mb-6">
+            <div className="w-full bg-gray-200 rounded h-3">
+              <div
+                className="bg-red-500 h-3 rounded transition-all duration-300"
+                style={{ width: `${deleteProgress}%` }}
+              ></div>
+            </div>
+            <p className="text-sm mt-2 text-gray-600">
+              正在删除商品... {deleteProgress}%
+            </p>
+          </div>
+        )}
 
         {/* 商品表格 */}
         <div className="card">
@@ -227,8 +278,7 @@ export default function ProductsPage() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
-                            <b></b>
-                          
+                          <b></b>
                           <button 
                             onClick={() => handleCreateOrder(product)}
                             className="text-success-600 hover:text-success-800"

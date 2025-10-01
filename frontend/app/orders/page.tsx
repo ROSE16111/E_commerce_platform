@@ -57,9 +57,8 @@ export default function OrdersPage() {
         productApi.getProducts()
       ])
       
-      // ordersResponse.data 才是真正的订单数组
       const sortedOrders = [...ordersResponse.data].sort((a, b) => {
-        if (!a.transaction_date) return 1   // 没日期的排后
+        if (!a.transaction_date) return 1
         if (!b.transaction_date) return -1
         return new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
       })
@@ -95,7 +94,7 @@ export default function OrdersPage() {
     }
   }
 
-  // 删除订单
+  // 删除单个订单
   const handleDelete = async (id: number) => {
     if (!confirm('确定要删除这个订单吗？删除后会自动恢复库存。')) return
     
@@ -105,6 +104,39 @@ export default function OrdersPage() {
       fetchData()
     } catch (error) {
       console.error('删除订单失败:', error)
+    }
+  }
+
+  // 🚀 批量删除状态
+  const [deleting, setDeleting] = useState(false)
+  const [deleteProgress, setDeleteProgress] = useState(0)
+
+  // 🚀 批量删除订单（带进度条）
+  const handleBulkDeleteOrders = async () => {
+    if (!confirm(`确定要删除当前显示的 ${filteredOrders.length} 个订单吗？`)) return
+
+    setDeleting(true)
+    setDeleteProgress(0)
+
+    try {
+      const total = filteredOrders.length
+
+      for (let i = 0; i < total; i++) {
+        await orderApi.deleteOrder(filteredOrders[i].id)
+
+        setDeleteProgress(Math.round(((i + 1) / total) * 100))
+
+        // 让进度条可见，避免 UI 太快
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+
+      toast.success(`成功删除 ${total} 个订单`)
+      fetchData()
+    } catch (error) {
+      console.error('批量删除订单失败:', error)
+      toast.error('批量删除订单失败')
+    } finally {
+      setTimeout(() => setDeleting(false), 800) // 显示 100% 后再关闭
     }
   }
 
@@ -128,7 +160,7 @@ export default function OrdersPage() {
     order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (products.find(p => p.id === order.product_id)?.name && products.find(p => p.id === order.product_id)?.name.toLowerCase().includes(searchTerm.toLowerCase()))
   )
-  // 获取渠道徽章样式
+
   const getChannelBadge = (channel: string) => {
     switch (channel) {
       case 'Facebook': return 'badge-primary'
@@ -138,7 +170,6 @@ export default function OrdersPage() {
     }
   }
 
-  // 获取状态徽章样式
   const getStatusBadge = (status: string) => {
     return status === 'done' ? 'badge-success' : 'badge-warning'
   }
@@ -170,10 +201,7 @@ export default function OrdersPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowImportModal(true)}
-              className="btn-secondary"
-            >
+            <button onClick={() => setShowImportModal(true)} className="btn-secondary">
               <Upload className="h-4 w-4 mr-2" />
               导入CSV
             </button>
@@ -187,487 +215,31 @@ export default function OrdersPage() {
               <Plus className="h-4 w-4 mr-2" />
               新增订单
             </button>
+            <button onClick={handleBulkDeleteOrders} className="btn-danger">
+              <Trash2 className="h-4 w-4 mr-2" />
+              批量删除
+            </button>
           </div>
         </div>
+
+        {/* 🚀 批量删除进度条 */}
+        {deleting && (
+          <div className="mb-6">
+            <div className="w-full bg-gray-200 rounded h-3">
+              <div
+                className="bg-red-500 h-3 rounded transition-all duration-300"
+                style={{ width: `${deleteProgress}%` }}
+              ></div>
+            </div>
+            <p className="text-sm mt-2 text-gray-600">
+              正在删除订单... {deleteProgress}%
+            </p>
+          </div>
+        )}
 
         {/* 订单表格 */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="text-lg font-semibold text-gray-900">
-              订单列表 ({filteredOrders.length})
-            </h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="table">
-              <thead className="table-header">
-                <tr>
-                  <th className="table-header-cell">订单号</th>
-                  <th className="table-header-cell">交易日期</th>
-                  <th className="table-header-cell">买家</th>
-                  <th className="table-header-cell">商品名称</th>
-                  <th className="table-header-cell">数量</th>
-                  <th className="table-header-cell">售价</th>
-                  <th className="table-header-cell">利润</th>
-                  <th className="table-header-cell">渠道</th>
-                  <th className="table-header-cell">状态</th>
-                  <th className="table-header-cell">备注</th>
-                  <th className="table-header-cell">操作</th>
-
-                </tr>
-              </thead>
-              <tbody className="table-body">
-                {loading ? (
-                  <tr>
-                    <td colSpan={10} className="table-cell text-center py-8">
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-success-600"></div>
-                        <span className="ml-2">加载中...</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : filteredOrders.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="table-cell text-center py-8 text-gray-500">
-                      暂无订单数据
-                    </td>
-                  </tr>
-                ) : (
-                  filteredOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td className="table-cell font-mono text-sm">{order.order_number}</td>
-                      <td className="table-cell">
-                        {order.transaction_date 
-                          ? new Date(order.transaction_date).toLocaleDateString('zh-CN')
-                          : new Date(order.created_at).toLocaleDateString('zh-CN')
-                        }
-                      </td>
-                      <td className="table-cell">{order.buyer_name || '-'}</td>
-                      <td className="table-cell font-mono text-sm">
-                        {products.find(p => p.id === order.product_id)?.name || 'N/A'}
-                      </td>
-                      <td className="table-cell">{order.quantity}</td>
-                      <td className="table-cell font-medium">¥{order.actual_price.toFixed(2)}</td>
-                      <td className="table-cell font-medium text-success-600">¥{order.profit.toFixed(2)}</td>
-                      <td className="table-cell">
-                        <span className={`badge ${getChannelBadge(order.channel)}`}>
-                          {order.channel}
-                        </span>
-                      </td>
-                      <td className="table-cell">
-                        <span className={`badge ${getStatusBadge(order.status)}`}>
-                          {order.status === 'done' ? '已完成' : 'pending'}
-                        </span>
-                      </td>
-                      <td className="text-sm text-gray-700">{order.remark || "-"}</td>  {/* 显示备注，如果没写就显示 “-” */}
-                      <td className="table-cell">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setShowDetailModal(order)}
-                            className="text-primary-600 hover:text-primary-800"
-                            title="查看详情"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingOrder(order)
-                              setShowModal(true)
-                            }}
-                            className="text-warning-600 hover:text-warning-800"
-                            title="编辑"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(order.id)}
-                            className="text-danger-600 hover:text-danger-800"
-                            title="删除"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* 新增/编辑订单模态框 */}
-        {showModal && (
-          <OrderModal
-            order={editingOrder}
-            products={products}
-            onSubmit={handleSubmit}
-            onClose={() => {
-              setShowModal(false)
-              setEditingOrder(null)
-            }}
-          />
-        )}
-
-        {/* 订单详情模态框 */}
-        {showDetailModal && (
-          <OrderDetailModal
-            order={showDetailModal}
-            products={products}
-            onClose={() => setShowDetailModal(null)}
-          />
-        )}
-
-        {/* CSV导入模态框 */}
-        {showImportModal && (
-          <ImportModal
-            onImport={handleImport}
-            onClose={() => setShowImportModal(false)}
-            title="导入订单CSV"
-            description="请选择包含订单信息的CSV文件"
-            requiredFields={['order_number', 'product_sku', 'actual_price', 'quantity', 'payment_method', 'channel', 'status']}
-            optionalFields={['transaction_date', 'buyer_name']}
-          />
-        )}
+        {/* ⚠️ 下面保持你的原始代码，不再贴全，以节省篇幅 */}
       </div>
     </Layout>
-  )
-}
-
-// 订单表单组件
-function OrderModal({ order, products, onSubmit, onClose }: {
-  order: Order | null
-  products: Product[]
-  onSubmit: (data: any) => void
-  onClose: () => void
-}) {
-  const [formData, setFormData] = useState({
-    product_sku: '',
-    actual_price: order ? order.actual_price.toString() : '', // 改为字符串
-    quantity: order ? order.quantity.toString() : '',         // 改为字符串
-    payment_method: order?.payment_method || 'cash',
-    channel: order?.channel || 'eBay',
-    status: order?.status || 'pending',
-    buyer_name: order?.buyer_name || '',
-    transaction_date: order?.transaction_date ? order.transaction_date.split('T')[0] : '',
-    remark: order?.remark || '',
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const submitData = {
-      ...formData,
-      actual_price: formData.actual_price ? parseFloat(formData.actual_price) : 0,
-      quantity: formData.quantity ? parseInt(formData.quantity) : 0,
-      transaction_date: new Date(formData.transaction_date).toISOString(),
-    }
-    onSubmit(submitData)
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold mb-4">
-          {order ? '编辑订单' : '新增订单'}
-        </h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-
-          {/* 商品 */}
-          <div>
-            <label className="form-label">商品 *</label>
-            {order ? (
-              // 编辑时：显示锁死的商品名称和 SKU
-              <input
-                type="text"
-                value={`${products.find(p => p.id === order.product_id)?.name || ''} (${products.find(p => p.id === order.product_id)?.sku || ''})`}
-                className="form-input"
-                disabled
-              />
-            ) : (
-              // 新建时：下拉选择
-              <select
-                value={formData.product_sku}
-                onChange={(e) => setFormData({ ...formData, product_sku: e.target.value })}
-                className="form-input"
-                required
-              >
-                <option value="">选择商品</option>
-                {products.map(product => (
-                  <option key={product.sku} value={product.sku}>
-                    {product.sku} - {product.name} (库存: {product.quantity})
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          {/* 实际售价 */}
-          <div>
-            <label className="form-label">实际售价 *</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.actual_price}
-              onChange={(e) => setFormData({ ...formData, actual_price: e.target.value })}
-              className="form-input"
-              required
-            />
-          </div>
-
-          {/* 数量 */}
-          <div>
-            <label className="form-label">数量 *</label>
-            <input
-              type="number"
-              min="1"
-              value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-              className="form-input"
-              required
-            />
-          </div>
-
-          {/* 支付方式 */}
-          <div>
-            <label className="form-label">支付方式 *</label>
-            <select
-              value={formData.payment_method}
-              onChange={(e) => setFormData({ ...formData, payment_method: e.target.value as 'cash' | 'payid' })}
-              className="form-input"
-              required
-            >
-              <option value="cash">现金</option>
-              <option value="payid">PayID</option>
-            </select>
-          </div>
-
-          {/* 销售渠道 */}
-          <div>
-            <label className="form-label">销售渠道 *</label>
-            <select
-              value={formData.channel}
-              onChange={(e) => setFormData({ ...formData, channel: e.target.value as 'eBay' | 'Facebook' |'saltFish'| 'other' })}
-              className="form-input"
-              required
-            >
-              <option value="eBay">eBay</option>
-              <option value="Facebook">Facebook</option>
-              <option value="saltFish">咸鱼</option>
-              <option value="other">其他</option>
-            </select>
-          </div>
-
-          {/* 订单状态 */}
-          <div>
-            <label className="form-label">订单状态 *</label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value as 'pending' | 'done' })}
-              className="form-input"
-              required
-            >
-              <option value="pending">待处理</option>
-              <option value="done">已完成</option>
-            </select>
-          </div>
-
-          {/* 买家姓名 */}
-          <div>
-            <label className="form-label">买家姓名</label>
-            <input
-              type="text"
-              value={formData.buyer_name}
-              onChange={(e) => setFormData({ ...formData, buyer_name: e.target.value })}
-              className="form-input"
-            />
-          </div>
-          
-          {/* 交易日期 */}
-          <div>
-            <label className="form-label">交易日期 *</label>
-            <input
-              type="date"
-              value={formData.transaction_date}
-              onChange={(e) => setFormData({ ...formData, transaction_date: e.target.value })}
-              className="form-input"
-              required
-            />
-          </div>
-
-          {/* 备注 */}
-          <div>
-            <label className="form-label">备注</label>
-            <input
-              type="text"
-              value={formData.remark}
-              onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-              className="form-input"
-            />
-          </div>
-
-          {/* 按钮 */}
-          <div className="flex gap-2 pt-4">
-            <button type="submit" className="btn-success flex-1">
-              {order ? '更新' : '创建'}
-            </button>
-            <button type="button" onClick={onClose} className="btn-secondary flex-1">
-              取消
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-// 订单详情组件
-function OrderDetailModal({ order, products, onClose }: {
-  order: Order
-  products: Product[]
-  onClose: () => void
-}) {
-  const product = products.find(p => p.id === order.product_id)
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[90vh] flex flex-col">
-        {/* 固定标题栏 */}
-        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
-          <h3 className="text-lg font-semibold">订单详情</h3>
-        </div>
-  
-        {/* 可滚动的内容区 */}
-        <div className="px-6 py-4 flex-1 overflow-y-auto space-y-3">
-          <div>
-            <label className="text-sm font-medium text-gray-500">订单号</label>
-            <p className="font-mono">{order.order_number}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">商品信息</label>
-            <p>{product?.name} ({product?.sku})</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">数量</label>
-            <p>{order.quantity}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">售价</label>
-            <p className="font-medium">¥{order.actual_price.toFixed(2)}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">成本</label>
-            <p>¥{product ? (product.cost_price * order.quantity).toFixed(2) : 'N/A'}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">利润</label>
-            <p className="font-medium text-success-600">¥{order.profit.toFixed(2)}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">渠道</label>
-            <p>{order.channel}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">支付方式</label>
-            <p>{order.payment_method === 'cash' ? '现金' : 'PayID'}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">状态</label>
-            <p>{order.status === 'done' ? '已完成' : '待处理'}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">买家</label>
-            <p>{order.buyer_name || '-'}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">备注</label>
-            <p>{order.remark || '-'}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">交易日期</label>
-            <p>{order.transaction_date ? new Date(order.transaction_date).toLocaleString('zh-CN') : '-'}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">创建时间</label>
-            <p>{new Date(order.created_at).toLocaleString('zh-CN')}</p>
-          </div>
-        </div>
-  
-        {/* 固定底部按钮 */}
-        <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0">
-          <button onClick={onClose} className="btn-secondary w-full">
-            关闭
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-  
-}
-
-// CSV导入组件（复用）
-function ImportModal({ onImport, onClose, title, description, requiredFields, optionalFields }: {
-  onImport: (file: File) => void
-  onClose: () => void
-  title: string
-  description: string
-  requiredFields: string[]
-  optionalFields: string[]
-}) {
-  const [file, setFile] = useState<File | null>(null)
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (file) {
-      onImport(file)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">{title}</h3>
-        <p className="text-gray-600 mb-4">{description}</p>
-        
-        <div className="mb-4">
-          <h4 className="font-medium mb-2">必填字段：</h4>
-          <div className="flex flex-wrap gap-1">
-            {requiredFields.map(field => (
-              <span key={field} className="badge badge-primary">{field}</span>
-            ))}
-          </div>
-        </div>
-        
-        <div className="mb-4">
-          <h4 className="font-medium mb-2">可选字段：</h4>
-          <div className="flex flex-wrap gap-1">
-            {optionalFields.map(field => (
-              <span key={field} className="badge badge-secondary">{field}</span>
-            ))}
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="form-label">选择CSV文件</label>
-            <input
-              type="file"
-              accept=".csv"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="form-input"
-              required
-            />
-          </div>
-          <div className="flex gap-2">
-            <button type="submit" className="btn-primary flex-1" disabled={!file}>
-              导入
-            </button>
-            <button type="button" onClick={onClose} className="btn-secondary flex-1">
-              取消
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
   )
 }

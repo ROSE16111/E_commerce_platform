@@ -62,7 +62,7 @@ Worker 根据路径 /api 走后端容器，/ 走前端容器。
 
 这种方式更贴近“全栈同源”，但配置复杂，部署成本高，对新手不友好
 
-3. 部署到 Cloudflare（真机上）
+1. 部署到 Cloudflare（真机上）
 * `npx wrangler login`
   * 令牌`6aSp_Zq1jJtcCgmD65rNvSCT3strgvCQJi5rjJsu` test: `Invoke-RestMethod -Uri "https://api.cloudflare.com/client/v4/user/tokens/verify" -Headers @{Authorization="Bearer 6aSp_Zq1jJtcCgmD65rNvSCT3strgvCQJi5rjJsu"}`
 
@@ -75,3 +75,6 @@ Worker 根据路径 /api 走后端容器，/ 走前端容器。
 ## 后端部署
 https://dashboard.render.com
 
+# 接入github
+不需要再手动build+deploy
+CI/CD（持续集成/部署）
