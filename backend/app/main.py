@@ -420,9 +420,9 @@ def export_orders(db: Session = Depends(get_db)):
     orders = db.query(models.Order).options(joinedload(models.Order.product)).all()
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["id", "product_sku", "quantity", "actual_price", "profit", "buyer_name", "transaction_date"])
+    writer.writerow(["order_number","transaction_date","buyer_name", "product_name", "quantity", "actual_price", "profit","payment_method" ,"channel", "status"])
     for o in orders:
-        writer.writerow([o.id, o.product.sku if o.product else "", o.quantity, o.actual_price, o.profit, o.buyer_name, o.transaction_date])
+        writer.writerow([o.order.number,  o.transaction_date,o.buyer_name, o.product.name if o.product else "", o.quantity, o.actual_price, o.profit,o.payment_method, o.channel,o.status,])
     output.seek(0)
     return StreamingResponse(output, media_type="text/csv", headers={
         "Content-Disposition": "attachment; filename=orders.csv"
