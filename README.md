@@ -44,11 +44,11 @@
 * frontend
 React + TailwindCSS + Next.js + Recharts
 * backend
-FastAPI/Django 哪个简单方便选哪个
+**FastAPI**; Django
 * Database
 PostgreSQL
 * Deployment
-打算自己手动用Vercel,ai不用帮我
+自己手动用Vercel
 
 # cursor to do list：
 1. Scaffold FastAPI backend with DB models and app entry
