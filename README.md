@@ -44,11 +44,11 @@
 * frontend
 React + TailwindCSS + Next.js + Recharts
 * backend
-**FastAPI**; Django
+**FastAPI**; Django(备选，未用)
 * Database
 PostgreSQL
 * Deployment
-自己手动用Vercel
+自己手动用cloudflare 和render
 
 # cursor to do list：
 1. Scaffold FastAPI backend with DB models and app entry
